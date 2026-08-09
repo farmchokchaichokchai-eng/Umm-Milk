@@ -3,351 +3,401 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Umm Milk — แดชบอร์ดคำสั่งซื้อ vs ยอดขายจริง</title>
+<title>Umm Milk — Production Planning Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Noto+Serif+Thai:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
-  --cream:#F6F1E7;
-  --cream-2:#EFE7D6;
-  --card:#FFFFFF;
-  --ink:#2B2420;
-  --ink-soft:#6B5F53;
-  --brown:#8A5A34;
-  --brown-dk:#6E4527;
-  --brown-lt:#C79A6B;
-  --green:#4C7A5B;
-  --red:#B4483A;
-  --line:#E4DAC7;
-  --radius:16px;
+  --navy:#1B140D; --navy-2:#241B12; --sidebar:#20180F;
+  --cream:#F6F1E7; --cream-2:#EFE7D6; --card:#FFFFFF;
+  --ink:#2B2420; --ink-soft:#6B5F53;
+  --brown:#8A5A34; --brown-dk:#6E4527; --brown-lt:#C79A6B; --brown-pale:#F0E3D2;
+  --green:#4C7A5B; --red:#B4483A; --line:#E4DAC7; --radius:16px;
+  --sidebar-w:250px;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
-body{
-  background:var(--cream);
-  color:var(--ink);
-  font-family:'Noto Sans Thai','Segoe UI',sans-serif;
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-}
+body{background:var(--cream);color:var(--ink);font-family:'Noto Sans Thai','Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
 ::selection{background:var(--brown-lt);color:#fff;}
-.wrap{max-width:1320px;margin:0 auto;padding:0 28px 80px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
 
-/* HERO */
-.hero{
-  background:
-    radial-gradient(1100px 420px at 85% -10%, rgba(138,90,52,0.14), transparent 60%),
-    linear-gradient(180deg,var(--cream-2) 0%, var(--cream) 100%);
-  border-bottom:1px solid var(--line);
-  padding:52px 28px 40px;
+/* LAYOUT */
+.app{display:flex;min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;background:var(--sidebar);color:#EDE3D3;
+  position:fixed;top:0;left:0;bottom:0;padding:26px 18px;display:flex;flex-direction:column;
+  overflow-y:auto;z-index:20;
 }
-.hero-inner{max-width:1320px;margin:0 auto;}
-.eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--brown-dk);font-weight:700;
-  background:#fff;border:1px solid var(--line);
-  padding:6px 14px;border-radius:999px;
-}
-.eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--brown);display:inline-block;}
-h1{
-  font-family:'Noto Serif Thai',serif;
-  font-weight:700;
-  font-size:clamp(28px,4vw,44px);
-  margin:18px 0 10px;
-  color:#20180F;
-  letter-spacing:-0.01em;
-}
-.hero p.sub{
-  max-width:760px;color:var(--ink-soft);font-size:16px;margin:0 0 26px;
-}
-.hero-meta{
-  display:flex;flex-wrap:wrap;gap:10px;
-  font-size:13px;color:var(--ink-soft);
-}
-.hero-meta span{
-  background:#fff;border:1px solid var(--line);padding:7px 13px;border-radius:10px;
-}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;padding:34px 40px 90px;}
 
-/* SECTION HEADERS */
-.section{margin-top:52px;}
-.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
-.section-head h2{
-  font-family:'Noto Serif Thai',serif;font-size:23px;margin:0;color:#20180F;font-weight:700;
-}
-.section-head .num{color:var(--brown);font-weight:800;margin-right:8px;}
-.section-head p{margin:4px 0 0;color:var(--ink-soft);font-size:14px;max-width:640px;}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 22px;border-bottom:1px solid rgba(255,255,255,0.09);margin-bottom:18px;}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brown),var(--brown-lt));display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-family:'Noto Serif Thai',serif;font-size:16px;flex-shrink:0;}
+.brand-text{font-size:13.5px;font-weight:700;color:#fff;line-height:1.25;}
+.brand-text span{display:block;font-size:10.5px;font-weight:500;color:#B7A88F;letter-spacing:.05em;text-transform:uppercase;margin-top:2px;}
 
-/* KPI CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-.kpi-card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:22px 22px 20px;position:relative;overflow:hidden;
+.nav-group-lbl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A7A61;font-weight:700;margin:16px 10px 8px;}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;cursor:pointer;
+  font-size:13.5px;font-weight:600;color:#CBBDA3;margin-bottom:3px;transition:background .12s;
 }
-.kpi-card .lbl{font-size:12.5px;color:var(--ink-soft);font-weight:600;letter-spacing:.02em;}
-.kpi-card .val{font-family:'Noto Serif Thai',serif;font-size:30px;font-weight:700;margin-top:8px;color:#20180F;}
-.kpi-card .delta{margin-top:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;}
-.delta.up{color:#2C5B3E;background:#E6F0E7;}
-.delta.down{color:#8C2E22;background:#F6E3DF;}
-.delta.neu{color:var(--ink-soft);background:var(--cream-2);}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+.nav-item.active{background:var(--brown);color:#fff;}
+.nav-item .ico{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+.nav-item .num{font-size:10.5px;opacity:.6;font-weight:700;width:16px;}
 
-/* CARD (chart container) */
-.card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:24px 24px 18px;
-}
-.card h3{margin:0 0 4px;font-size:16px;font-weight:700;color:#20180F;}
-.card p.desc{margin:0 0 16px;font-size:13px;color:var(--ink-soft);}
+.sidebar-foot{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,0.09);font-size:11px;color:#8A7A61;}
+.sidebar-foot b{color:#C9B896;display:block;font-size:12px;margin-bottom:3px;}
+
+/* TOPBAR inside main */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:30px;flex-wrap:wrap;}
+.topbar h1{font-family:'Noto Serif Thai',serif;font-size:26px;font-weight:700;margin:0 0 6px;color:var(--navy);}
+.topbar p{margin:0;color:var(--ink-soft);font-size:13.8px;max-width:640px;}
+.topbar-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.topbar-meta span{background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:9px;font-size:12px;color:var(--ink-soft);font-weight:600;}
+
+/* PANELS */
+.panel{display:none;}
+.panel.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:8px;}
+.kpi-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 18px;}
+.kpi-card .lbl{font-size:12px;color:var(--ink-soft);font-weight:600;}
+.kpi-card .val{font-family:'Noto Serif Thai',serif;font-size:27px;font-weight:700;margin-top:7px;color:var(--navy);}
+.kpi-card .delta{margin-top:8px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;}
+.delta.up{color:#2C5B3E;background:#E6F0E7;} .delta.down{color:#8C2E22;background:#F6E3DF;}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 22px 18px;margin-bottom:16px;}
+.card h3{margin:0 0 4px;font-size:15px;font-weight:700;color:var(--navy);}
+.card p.desc{margin:0 0 15px;font-size:12.6px;color:var(--ink-soft);}
 .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
 .chart-box{position:relative;width:100%;}
 
+.section-lbl{display:flex;align-items:center;gap:9px;margin:0 0 16px;}
+.section-lbl .dotnum{width:26px;height:26px;border-radius:8px;background:var(--brown-pale);color:var(--brown-dk);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.section-lbl h2{font-family:'Noto Serif Thai',serif;font-size:19px;margin:0;color:var(--navy);font-weight:700;}
+
 /* TABLE */
 .table-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
-.table-tools input[type=text]{
-  flex:1;min-width:220px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);
-  background:#fff;font-family:inherit;font-size:14px;
-}
-.table-tools select{
-  padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:14px;color:var(--ink);
-}
-.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;}
-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:920px;}
-thead th{
-  text-align:left;background:var(--cream-2);color:var(--brown-dk);
-  padding:11px 14px;font-weight:700;font-size:12.5px;letter-spacing:.02em;
-  position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;
-  border-bottom:1px solid var(--line);
-}
+.table-tools input[type=text]{flex:1;min-width:220px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:13.5px;}
+.table-tools select{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:13.5px;color:var(--ink);}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;max-height:640px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+thead th{text-align:left;background:var(--cream-2);color:var(--brown-dk);padding:11px 14px;font-weight:700;font-size:12px;position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--line);}
 thead th:hover{background:#E6DAC0;}
 thead th.sorted::after{content:' ▾';color:var(--brown);}
 thead th.sorted.asc::after{content:' ▴';color:var(--brown);}
-tbody td{padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--line);white-space:nowrap;}
 tbody tr:hover{background:#FBF7EE;}
 tbody tr:last-child td{border-bottom:none;}
 td.num{text-align:right;font-variant-numeric:tabular-nums;}
-td.name{white-space:normal;min-width:220px;font-weight:500;}
-.tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;font-weight:700;}
-.tag.pos{background:#E6F0E7;color:#2C5B3E;}
-.tag.neg{background:#F6E3DF;color:#8C2E22;}
-.tag.zero{background:var(--cream-2);color:var(--ink-soft);}
-.pill{font-size:11px;background:var(--cream-2);color:var(--ink-soft);padding:2px 8px;border-radius:6px;}
+td.name{white-space:normal;min-width:210px;font-weight:500;}
+.tag{display:inline-block;font-size:10.6px;padding:2px 9px;border-radius:999px;font-weight:700;}
+.tag.pos{background:#E6F0E7;color:#2C5B3E;} .tag.neg{background:#F6E3DF;color:#8C2E22;} .tag.zero{background:var(--cream-2);color:var(--ink-soft);}
+.pill{font-size:10.6px;background:var(--cream-2);color:var(--ink-soft);padding:2px 8px;border-radius:6px;}
 .badge-nodata{font-size:11px;color:#A8825A;font-style:italic;}
 
-/* order dashboard 2x2 like reference */
 .order-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.hbar-row{display:flex;align-items:center;gap:10px;margin:9px 0;}
-.hbar-label{width:110px;font-size:13px;color:var(--ink-soft);text-align:right;flex-shrink:0;}
-.hbar-track{flex:1;background:var(--cream-2);border-radius:6px;height:16px;overflow:hidden;}
+.hbar-row{display:flex;align-items:center;gap:10px;margin:8px 0;}
+.hbar-label{width:130px;font-size:12.3px;color:var(--ink-soft);text-align:right;flex-shrink:0;}
+.hbar-track{flex:1;background:var(--cream-2);border-radius:6px;height:15px;overflow:hidden;}
 .hbar-fill{height:100%;background:var(--brown);border-radius:6px;}
-.hbar-val{width:34px;font-size:13px;font-weight:700;color:#20180F;}
+.hbar-val{width:44px;font-size:12.3px;font-weight:700;color:var(--navy);}
 
-.note-box{
-  background:#FBF3E7;border:1px dashed var(--brown-lt);border-radius:12px;
-  padding:14px 16px;font-size:13px;color:#6E5334;margin-top:14px;
-}
+.note-box{background:#FBF3E7;border:1px dashed var(--brown-lt);border-radius:12px;padding:14px 16px;font-size:12.4px;color:#6E5334;margin-top:6px;}
 
-/* group table */
-.group-list{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
-.group-item{display:grid;grid-template-columns:200px 1fr 90px;gap:12px;align-items:center;}
-.group-item .gname{font-size:13.5px;font-weight:600;}
-.group-bar{height:20px;border-radius:6px;background:var(--cream-2);position:relative;overflow:hidden;}
+.group-list{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.group-item{display:grid;grid-template-columns:210px 1fr 90px;gap:12px;align-items:center;}
+.group-item .gname{font-size:12.7px;font-weight:600;}
+.group-bar{height:19px;border-radius:6px;background:var(--cream-2);position:relative;overflow:hidden;}
 .group-bar .seg-forecast{position:absolute;top:0;left:0;bottom:0;background:var(--brown-lt);opacity:.55;}
 .group-bar .seg-actual{position:absolute;top:0;left:0;bottom:0;background:var(--brown);}
-.group-pct{font-size:12.5px;text-align:right;font-weight:700;color:var(--brown-dk);}
+.group-pct{font-size:12px;text-align:right;font-weight:700;color:var(--brown-dk);}
 
-footer{
-  margin-top:70px;padding:28px 0 10px;border-top:1px solid var(--line);
-  color:var(--ink-soft);font-size:12.5px;
-}
-.legend-inline{display:flex;gap:18px;align-items:center;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
-.legend-inline span{display:inline-flex;align-items:center;gap:6px;}
-.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.week-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.week-tab{background:#fff;border:1px solid var(--line);padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft);}
+.week-tab.active{background:var(--brown);color:#fff;border-color:var(--brown);}
 
+.io-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;}
+.io-bar .io-lbl{font-size:12.3px;color:var(--ink-soft);font-weight:600;margin-right:4px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:opacity .12s;}
+.btn:hover{opacity:.88;}
+.btn-primary{background:var(--brown);color:#fff;}
+.btn-outline{background:#fff;color:var(--brown-dk);border-color:var(--brown-lt);}
+.btn input[type=file]{display:none;}
+.io-status{font-size:12.3px;color:var(--ink-soft);}
+.io-status.ok{color:#2C5B3E;font-weight:600;}
+.io-status.err{color:#8C2E22;font-weight:600;}
+
+.proj-card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#FBF7EE;}
+.proj-card .m{font-size:12px;color:var(--ink-soft);font-weight:700;}
+.proj-card .p{font-family:'Noto Serif Thai',serif;font-size:21px;font-weight:700;color:var(--navy);margin:6px 0 2px;}
+.proj-card .rng{font-size:11.4px;color:var(--ink-soft);}
+
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px;}
+.flow-node{background:var(--brown-pale);border:1px solid var(--line);padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;color:var(--brown-dk);}
+.flow-arrow{color:var(--brown-lt);font-size:14px;}
+
+ul.plain{font-size:12.8px;color:var(--ink-soft);padding-left:18px;margin:0;}
+ul.plain li{margin-bottom:5px;}
+
+footer{margin-top:36px;padding:22px 0 10px;border-top:1px solid var(--line);color:var(--ink-soft);font-size:11.8px;}
+
+.mobile-topbar{display:none;}
 @media(max-width:980px){
+  .sidebar{position:static;width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:14px;}
+  .main{margin-left:0;padding:22px 18px 60px;}
+  .brand{border-bottom:none;margin-bottom:0;padding:2px 6px;}
+  .nav-group-lbl{display:none;}
+  .sidebar-foot{display:none;}
+  .nav-item{padding:8px 10px;font-size:12.5px;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .grid-2,.grid-4,.order-grid{grid-template-columns:1fr;}
+  .grid-2,.grid-3,.grid-4,.order-grid{grid-template-columns:1fr;}
   .group-item{grid-template-columns:120px 1fr 60px;}
 }
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-inner">
-    <span class="eyebrow">Umm Milk · Sales &amp; Order Intelligence</span>
-    <h1>แดชบอร์ดเปรียบเทียบคำสั่งซื้อ / แผนการขาย กับยอดขายจริง</h1>
-    <p class="sub">รวมข้อมูลทุกชีตจาก 3 ไฟล์ — สรุปยอดซื้อขาย-โอนย้ายสินค้า (ยอดขายจริงรายเดือน), ประมาณการยอดขายจากฝ่ายการตลาด (MK Weekly/Monthly Plan) และแผนคำสั่งซื้อประจำสัปดาห์ถึงโรงงาน (Planning Orders to CFP) — จับคู่ตามรหัสสินค้า (SKU) เพื่อดูส่วนต่างระหว่างแผนกับยอดขายจริง แยกตามกลุ่มสินค้าและช่องทางขาย</p>
-    <div class="hero-meta">
-      <span id="meta-months">ช่วงข้อมูลยอดขายจริง: ม.ค. – ก.ค. 2569</span>
-      <span id="meta-skus">รวม 101 SKU</span>
-      <span id="meta-week">สัปดาห์คำสั่งซื้อ: 24–30 มิ.ย. 2569</span>
-      <span>สร้างแดชบอร์ดเมื่อ 9 ส.ค. 2569</span>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">U</div>
+      <div class="brand-text">Umm Milk<span>Planning Intelligence</span></div>
     </div>
+
+    <div class="nav-group-lbl">ภาพรวม</div>
+    <div class="nav-item active" data-tab="overview"><span class="num">01</span><span>ภาพรวม (Overview)</span></div>
+    <div class="nav-item" data-tab="trend"><span class="num">02</span><span>แนวโน้ม &amp; ประมาณการ</span></div>
+
+    <div class="nav-group-lbl">การเปรียบเทียบ</div>
+    <div class="nav-item" data-tab="groups"><span class="num">03</span><span>กลุ่มสินค้า &amp; ช่องทาง</span></div>
+    <div class="nav-item" data-tab="sku"><span class="num">04</span><span>ตาราง SKU ทั้งหมด</span></div>
+
+    <div class="nav-group-lbl">โรงงาน</div>
+    <div class="nav-item" data-tab="weekly"><span class="num">05</span><span>คำสั่งซื้อรายสัปดาห์</span></div>
+    <div class="nav-item" data-tab="factory"><span class="num">06</span><span>เทียบแผนโรงงาน</span></div>
+
+    <div class="nav-group-lbl">ระบบ</div>
+    <div class="nav-item" data-tab="roadmap"><span class="num">07</span><span>แนวทางขยายระบบ</span></div>
+
+    <div class="sidebar-foot">
+      <b>Single Source of Truth</b>
+      Order → Marketing Plan → Factory → ยอดขายจริง<br>อัปเดตล่าสุด 9 ส.ค. 2569
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ================= OVERVIEW ================= -->
+    <div class="panel active" id="panel-overview">
+      <div class="topbar">
+        <div>
+          <h1>ภาพรวมระบบ Production Planning</h1>
+          <p>เชื่อมโยงข้อมูลคำสั่งซื้อ แผนฝ่ายการตลาด แผนโรงงาน และยอดขายจริง เข้าไว้ในที่เดียว เพื่อวิเคราะห์แนวโน้ม ส่วนต่าง และสนับสนุนการตัดสินใจ</p>
+        </div>
+        <div class="topbar-meta">
+          <span id="meta-months">ข้อมูลยอดขายจริง: ม.ค.–ก.ค. 2569</span>
+          <span id="meta-skus">รวม 101 SKU</span>
+          <span id="meta-weeks">2 สัปดาห์คำสั่งซื้อ</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:20px 22px;">
+        <div class="flow" id="flowDiagram"></div>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid" style="margin-top:16px;"></div>
+
+      <div class="grid-2" style="margin-top:16px;">
+        <div class="card">
+          <h3>แนวโน้มยอดขายจริง vs แผนฝ่ายการตลาด</h3>
+          <p class="desc">ม.ค.–ก.ค. 2569</p>
+          <div class="chart-box" style="height:280px;"><canvas id="chartOverviewTrend"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>สัดส่วนยอดขายจริงตามช่องทาง</h3>
+          <p class="desc">BU1 / ศูนย์กระจายสินค้า / ลูกค้าภายนอก / ลูกค้าภายใน</p>
+          <div class="chart-box" style="height:280px;"><canvas id="chartOverviewChannel"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TREND ================= -->
+    <div class="panel" id="panel-trend">
+      <div class="section-lbl"><div class="dotnum">02</div><h2>แนวโน้ม &amp; ประมาณการความน่าจะเป็น</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:760px;margin-top:-8px;">เส้นทึบ = ยอดขายจริงที่เกิดขึ้นแล้ว · เส้นประ = ประมาณการ 3 เดือนถัดไปด้วยวิธี Linear Trend Projection พร้อมช่วงความเชื่อมั่นโดยประมาณ เทียบกับแผนฝ่ายการตลาดในช่วงเวลาเดียวกัน</p>
+      <div class="card" style="margin-top:14px;">
+        <div class="chart-box" style="height:340px;"><canvas id="chartMonthly"></canvas></div>
+      </div>
+      <div class="grid-3" id="projCards"></div>
+      <div class="note-box" id="trendMethodNote"></div>
+    </div>
+
+    <!-- ================= GROUPS ================= -->
+    <div class="panel" id="panel-groups">
+      <div class="section-lbl"><div class="dotnum">03</div><h2>ส่วนต่างตามกลุ่มสินค้าและช่องทาง</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:760px;margin-top:-8px;">จัดกลุ่มสินค้าตามรหัส SKU เป็น 8 กลุ่ม เทียบยอดขายจริงสะสมกับแผน/ประมาณการฝ่ายการตลาด ช่วง 7 เดือนเดียวกัน</p>
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="card">
+          <h3>ยอดสะสม 7 เดือน ตามกลุ่มสินค้า</h3>
+          <p class="desc">แท่งเข้ม = ยอดขายจริง, แท่งอ่อน = แผน/ประมาณการ</p>
+          <div class="group-list" id="group-list"></div>
+        </div>
+        <div class="card">
+          <h3>สัดส่วนยอดขายจริงตามช่องทาง</h3>
+          <p class="desc">แยกตามช่องทางในไฟล์สรุปยอดซื้อขาย</p>
+          <div class="chart-box" style="height:270px;"><canvas id="chartChannel"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SKU TABLE ================= -->
+    <div class="panel" id="panel-sku">
+      <div class="section-lbl"><div class="dotnum">04</div><h2>ตารางเปรียบเทียบรายสินค้า (ทุก SKU)</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:760px;margin-top:-8px;">ยอดขายจริงสะสม vs แผน/ประมาณการ 7 เดือน — คลิกหัวคอลัมน์เพื่อเรียงลำดับ ค้นหาหรือกรองกลุ่มได้</p>
+      <div class="card" style="margin-top:14px;">
+        <div class="table-tools">
+          <input type="text" id="searchBox" placeholder="ค้นหารหัสสินค้า หรือ ชื่อสินค้า…">
+          <select id="groupFilter"><option value="">ทุกกลุ่มสินค้า</option></select>
+          <select id="statusFilter">
+            <option value="">ทุกสถานะ</option>
+            <option value="over">ขายเกินแผน</option>
+            <option value="under">ขายต่ำกว่าแผน</option>
+            <option value="nofcst">ไม่มีแผนเทียบ</option>
+            <option value="noact">ไม่มียอดขายจริง</option>
+          </select>
+        </div>
+        <div class="table-scroll">
+          <table id="skuTable">
+            <thead><tr>
+              <th data-key="code">รหัสสินค้า</th><th data-key="name">ชื่อสินค้า</th><th data-key="group">กลุ่ม</th>
+              <th data-key="actual_total" class="num">ยอดขายจริง</th><th data-key="forecast_total" class="num">แผน/ประมาณการ</th>
+              <th data-key="diff" class="num">ส่วนต่าง</th><th data-key="diff_pct" class="num">%ต่างจากแผน</th><th data-key="unit">หน่วย</th>
+            </tr></thead>
+            <tbody id="skuTbody"></tbody>
+          </table>
+        </div>
+        <div class="note-box">SKU ที่ "ไม่มีแผนเทียบ" คือมียอดขายจริงแต่ไม่ปรากฏในไฟล์ประมาณการฝ่ายการตลาด ควรตรวจรหัสสินค้าให้ตรงกันทั้งสองไฟล์เพื่อความแม่นยำของระบบ</div>
+      </div>
+    </div>
+
+    <!-- ================= WEEKLY ORDERS ================= -->
+    <div class="panel" id="panel-weekly">
+      <div class="section-lbl"><div class="dotnum">05</div><h2>Dashboard คำสั่งซื้อประจำสัปดาห์ (Factory Planning Orders)</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:800px;margin-top:-8px;">ข้อมูลจากไฟล์ Planning Orders to CFP ที่หน่วยงานที่เกี่ยวข้องกรอกส่งทุกสัปดาห์ — ระบบรองรับการเพิ่มไฟล์สัปดาห์ใหม่ต่อเนื่องเพื่อสะสมเป็นฐานข้อมูลกลาง</p>
+      <div class="io-bar" style="margin-top:14px;">
+        <span class="io-lbl">นำเข้า/ส่งออกข้อมูล Excel:</span>
+        <label class="btn btn-primary">
+          📥 นำเข้าไฟล์ Planning Orders (.xlsx)
+          <input type="file" id="importFile" accept=".xlsx,.xls">
+        </label>
+        <div class="btn btn-outline" id="exportBtn">📤 ส่งออกสัปดาห์นี้เป็น Excel</div>
+        <span class="io-status" id="ioStatus"></span>
+      </div>
+      <div class="week-tabs" id="weekTabs"></div>
+      <div class="order-grid">
+        <div class="card"><h3>จำนวนรายการสั่งซื้อ แยกตามหน้าร้าน/จุดขาย</h3><p class="desc" id="shopDesc"></p><div id="shopBars"></div></div>
+        <div class="card"><h3>ยอดสั่งซื้อรวมต่อวัน</h3><p class="desc" id="dayDesc"></p><div class="chart-box" style="height:250px;"><canvas id="chartDay"></canvas></div></div>
+        <div class="card"><h3>สินค้าที่มีคำสั่งซื้อสูงสุดในสัปดาห์นี้</h3><div id="topProductsList"></div></div>
+        <div class="card"><h3>ความครบถ้วนของข้อมูล (Coverage)</h3><p class="desc">กลุ่มสินค้าที่มี/ไม่มีการบันทึกคำสั่งซื้อในสัปดาห์นี้ จาก 13 กลุ่ม</p><div id="coverageList"></div></div>
+      </div>
+      <div class="note-box">หมายเหตุ: กราฟ "เวลาที่โพสต์คำสั่งซื้อ" และ "ระยะเวลาแจ้งล่วงหน้าโรงงาน" ต้องใช้ timestamp การแจ้งคำสั่งซื้อจริงซึ่งยังไม่มีในไฟล์นี้ — หากหน่วยงานเพิ่มคอลัมน์วัน-เวลาที่แจ้งคำสั่งซื้อ ระบบจะคำนวณ 2 กราฟนี้เพิ่มได้ทันที</div>
+    </div>
+
+    <!-- ================= FACTORY PLAN ================= -->
+    <div class="panel" id="panel-factory">
+      <div class="section-lbl"><div class="dotnum">06</div><h2>เทียบคำสั่งซื้อรายสัปดาห์ กับแผนโรงงานรายสัปดาห์</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:800px;margin-top:-8px;">แผนโรงงาน/สัปดาห์ = แผนรายเดือนของฝ่ายการตลาดในเดือนนั้น ÷ 4.33 สัปดาห์ เทียบกับยอดสั่งซื้อจริงที่บันทึกในสัปดาห์ที่เลือก (ส่วนที่ 05) แยกตามกลุ่มสินค้า</p>
+      <div class="card" style="margin-top:14px;">
+        <div class="table-scroll" style="max-height:none;">
+          <table>
+            <thead><tr><th>กลุ่มสินค้า</th><th class="num">คำสั่งซื้อจริง/สัปดาห์</th><th class="num">แผนโรงงาน/สัปดาห์</th><th class="num">ส่วนต่าง</th><th class="num">%เทียบแผน</th></tr></thead>
+            <tbody id="weeklyVsFactoryTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ROADMAP ================= -->
+    <div class="panel" id="panel-roadmap">
+      <div class="section-lbl"><div class="dotnum">07</div><h2>แนวทางขยายระบบ — Single Source of Truth</h2></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;max-width:800px;margin-top:-8px;">ตามรายงานผลการทดลองงานเดือนที่ 2: เชื่อมทุกจุดของกระบวนการด้วยไฟล์ Excel มาตรฐานจากผู้รับผิดชอบแต่ละหน่วยงาน แล้วป้อนเข้าสู่ระบบเดียวกันนี้</p>
+      <div class="grid-3" style="margin-top:14px;">
+        <div class="card">
+          <h3>ข้อมูลที่มีแล้วในระบบนี้</h3>
+          <p class="desc">Order → Marketing Plan → ยอดขายจริง</p>
+          <ul class="plain">
+            <li>สรุปยอดซื้อ-ขาย-โอนย้ายสินค้า (ยอดขายจริงรายเดือน ทุกชีต)</li>
+            <li>ประมาณการยอดขายฝ่ายการตลาด รายเดือน ปี 69 (ทุก BU)</li>
+            <li>คำสั่งซื้อรายสัปดาห์ถึงโรงงาน (สะสมได้หลายสัปดาห์)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>ข้อมูลที่ควรเพิ่มถัดไป</h3>
+          <p class="desc">เพื่อให้ครบตามผังในรายงาน</p>
+          <ul class="plain">
+            <li>แผนการผลิตรายวัน/สัปดาห์/เดือนจากโรงงาน (Production Plan)</li>
+            <li>บันทึกผลผลิตจริง (Actual Production)</li>
+            <li>ข้อมูลการส่งมอบ (Delivery) และ Stock Balance</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>รูปแบบไฟล์ Excel ที่แนะนำ</h3>
+          <p class="desc">คอลัมน์มาตรฐานให้ทุกหน่วยงานกรอกเหมือนกัน</p>
+          <ul class="plain">
+            <li>Customer/BU, SKU, Order Qty, Delivery Date</li>
+            <li>Production Date, Production Plan, Actual Production</li>
+            <li>Delivery Qty, Stock Balance</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note-box">เมื่อมีไฟล์ Production Plan / Actual Production / Delivery / Stock ในรูปแบบคอลัมน์ข้างต้น สามารถส่งเข้ามาต่อได้ทันที ระบบจะเพิ่มแท็บการเทียบ Order–Production–Delivery–Stock และคำนวณ Variance ในลักษณะเดียวกับที่ทำกับ Order vs ยอดขายจริงในแดชบอร์ดนี้</div>
+
+      <footer>
+        แหล่งข้อมูล: 1) สรุปยอดซื้อ-ขาย-โอนย้ายสินค้า Umm Milk (ทุกชีต) · 2) MK ประมาณการยอดขาย Umm Milk แต่ละ BU มิ.ย.69–ธ.ค.69 (Rev) (ทุกชีต) · 3) Planning Orders to CFP รายสัปดาห์ (สะสมหลายสัปดาห์ ทุกชีต) — จับคู่รหัสสินค้า/กลุ่มสินค้าอัตโนมัติ ตัวเลขที่ไม่มีในไฟล์ต้นทางนับเป็น 0 ประมาณการแนวโน้มคำนวณด้วย Linear Trend เพื่อการวางแผนเบื้องต้น ควรใช้ร่วมกับดุลยพินิจของผู้รับผิดชอบก่อนตัดสินใจทางธุรกิจ
+      </footer>
+    </div>
+
   </div>
 </div>
 
-<div class="wrap">
-
-  <!-- KPI -->
-  <div class="section">
-    <div class="kpi-grid" id="kpi-grid"></div>
-  </div>
-
-  <!-- MONTHLY TREND -->
-  <div class="section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">01</span>แนวโน้มรายเดือน — แผนการขาย vs ยอดขายจริง</h2>
-        <p>ผลรวมทุก SKU ต่อเดือน (ม.ค.–ก.ค. 2569) เทียบระหว่างประมาณการจากฝ่ายการตลาด กับยอดขายจริงที่เกิดขึ้น</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="chart-box" style="height:340px;"><canvas id="chartMonthly"></canvas></div>
-    </div>
-  </div>
-
-  <!-- GROUP COMPARISON -->
-  <div class="section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">02</span>เปรียบเทียบตามกลุ่มสินค้า (Grouping)</h2>
-        <p>จัดกลุ่มสินค้าทั้งหมดออกเป็น 8 หมวด เทียบยอดขายจริงสะสมกับแผน/ประมาณการในช่วงเดียวกัน</p>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <h3>ยอดสะสม 7 เดือน ตามกลุ่มสินค้า</h3>
-        <p class="desc">แท่งเข้ม = ยอดขายจริง, แท่งอ่อน = แผน/ประมาณการ (หน่วยนับตามสินค้า)</p>
-        <div class="group-list" id="group-list"></div>
-      </div>
-      <div class="card">
-        <h3>สัดส่วนยอดขายจริงตามช่องทาง</h3>
-        <p class="desc">แยกตามช่องทางที่บันทึกในไฟล์สรุปยอดซื้อขาย (BU1 / ศูนย์กระจายสินค้า / ลูกค้าภายนอก / ลูกค้าภายใน)</p>
-        <div class="chart-box" style="height:280px;"><canvas id="chartChannel"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SKU TABLE -->
-  <div class="section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">03</span>ตารางเปรียบเทียบรายสินค้า (ทุก SKU)</h2>
-        <p>ยอดขายจริงสะสม vs แผน/ประมาณการ 7 เดือน (ม.ค.–ก.ค. 2569) — คลิกหัวคอลัมน์เพื่อเรียงลำดับ ค้นหาหรือกรองกลุ่มได้ด้านล่าง</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="table-tools">
-        <input type="text" id="searchBox" placeholder="ค้นหารหัสสินค้า หรือ ชื่อสินค้า…">
-        <select id="groupFilter"><option value="">ทุกกลุ่มสินค้า</option></select>
-        <select id="statusFilter">
-          <option value="">ทุกสถานะ</option>
-          <option value="over">ขายเกินแผน</option>
-          <option value="under">ขายต่ำกว่าแผน</option>
-          <option value="nofcst">ไม่มีแผนเทียบ</option>
-          <option value="noact">ไม่มียอดขายจริง</option>
-        </select>
-      </div>
-      <div class="table-scroll">
-        <table id="skuTable">
-          <thead>
-            <tr>
-              <th data-key="code">รหัสสินค้า</th>
-              <th data-key="name">ชื่อสินค้า</th>
-              <th data-key="group">กลุ่ม</th>
-              <th data-key="actual_total" class="num">ยอดขายจริง</th>
-              <th data-key="forecast_total" class="num">แผน/ประมาณการ</th>
-              <th data-key="diff" class="num">ส่วนต่าง</th>
-              <th data-key="diff_pct" class="num">%ต่างจากแผน</th>
-              <th data-key="unit">หน่วย</th>
-            </tr>
-          </thead>
-          <tbody id="skuTbody"></tbody>
-        </table>
-      </div>
-      <div class="note-box">หมายเหตุ: SKU ที่ "ไม่มีแผนเทียบ" หมายถึงสินค้าที่มียอดขายจริงแต่ไม่ปรากฏในไฟล์ประมาณการของฝ่ายการตลาด (MK) และในทางกลับกัน — ควรตรวจสอบรหัสสินค้าให้ตรงกันทั้งสองไฟล์เพื่อความแม่นยำของ % ต่างจากแผน</div>
-    </div>
-  </div>
-
-  <!-- WEEKLY ORDER DASHBOARD -->
-  <div class="section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">04</span>แดชบอร์ดคำสั่งซื้อประจำสัปดาห์</h2>
-        <p>จากไฟล์ Planning Orders to CFP สัปดาห์ 24–30 มิ.ย. 2569 — แสดงเฉพาะรายการที่มีการบันทึกจำนวนสั่งซื้อจริงในสัปดาห์นี้</p>
-      </div>
-    </div>
-    <div class="order-grid">
-      <div class="card">
-        <h3>จำนวนรายการสั่งซื้อ แยกตามหน้าร้าน/จุดขาย</h3>
-        <p class="desc">รวมจากทุกสินค้าที่มีบันทึกคำสั่งซื้อในสัปดาห์นี้</p>
-        <div id="shopBars"></div>
-      </div>
-      <div class="card">
-        <h3>ยอดสั่งซื้อรวมต่อวัน</h3>
-        <p class="desc">24–30 มิ.ย. 2569</p>
-        <div class="chart-box" style="height:260px;"><canvas id="chartDay"></canvas></div>
-      </div>
-      <div class="card">
-        <h3>สินค้าที่มีคำสั่งซื้อในสัปดาห์นี้</h3>
-        <div id="skuOrderList"></div>
-      </div>
-      <div class="card">
-        <h3>ความครบถ้วนของข้อมูลคำสั่งซื้อรายสัปดาห์</h3>
-        <p class="desc">สัดส่วนกลุ่มสินค้าที่มี/ไม่มีการบันทึกคำสั่งซื้อในสัปดาห์นี้ จากทั้งหมด 12 กลุ่มสินค้าในไฟล์ Planning Orders</p>
-        <div id="coverageList"></div>
-      </div>
-    </div>
-    <div class="note-box">
-      <strong>หมายเหตุเรื่องข้อมูล:</strong> ไฟล์ Planning Orders สัปดาห์ 24–30 มิ.ย. 2569 มีการกรอกข้อมูลจริงเพียง 2 จาก 12 กลุ่มสินค้า (ไอศกรีมถาด 2.5 kg. และกล่อง 2.5 kg.) ส่วนกลุ่มอื่น (นมพาสเจอร์ไรส์, 0%Lactose, ไอศกรีมถ้วย, โยเกิร์ต, ชีส ฯลฯ) ยังเป็นแบบฟอร์มว่างที่รอการกรอก — กราฟ "เวลาที่โพสต์คำสั่งซื้อ" และ "ระยะเวลาแจ้งล่วงหน้าให้โรงงาน" ในภาพตัวอย่างต้องใช้ข้อมูลเวลา/วันที่แจ้งคำสั่งซื้อจริง (timestamp) ซึ่งไม่มีอยู่ในไฟล์นี้ จึงไม่สามารถสร้างกราฟทั้งสองรายการได้จนกว่าจะมีการบันทึกเวลาแจ้งคำสั่งซื้อเพิ่มเติม
-    </div>
-  </div>
-
-  <!-- WEEKLY VS FACTORY PLAN -->
-  <div class="section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">05</span>เทียบคำสั่งซื้อรายสัปดาห์ กับแผนรายสัปดาห์ของโรงงาน (คำนวณจากแผนรายเดือน MK)</h2>
-        <p>แผนรายสัปดาห์ของโรงงาน = แผน/ประมาณการรายเดือนของฝ่ายการตลาด (มิ.ย. 2569) ÷ 4.33 สัปดาห์ เทียบกับยอดสั่งซื้อจริงที่บันทึกในสัปดาห์ 24–30 มิ.ย. 2569 (เฉพาะ SKU ที่มีข้อมูลทั้งสองฝั่ง)</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
-              <th class="num">คำสั่งซื้อจริง (สัปดาห์)</th>
-              <th class="num">แผนโรงงาน/สัปดาห์ (จาก MK มิ.ย.)</th>
-              <th class="num">ส่วนต่าง</th>
-              <th class="num">%เทียบแผน</th>
-            </tr>
-          </thead>
-          <tbody id="weeklyVsFactoryTbody"></tbody>
-        </table>
-      </div>
-      <div class="note-box" id="weeklyVsFactoryNote"></div>
-    </div>
-  </div>
-
-  <footer>
-    แหล่งข้อมูล: 1) สรุปยอดซื้อ-ขาย-โอนย้ายสินค้า Umm Milk (ทุกชีต) · 2) MK ประมาณการยอดขาย Umm Milk แต่ละ BU มิ.ย.69–ธ.ค.69 (Rev) (ทุกชีต) · 3) Planning Orders to CFP Weekly/Monthly 24–30 มิ.ย. 2569 (ทุกชีต) — จัดทำโดยจับคู่รหัสสินค้าอัตโนมัติ ตัวเลขที่ไม่มีข้อมูลในไฟล์ต้นทางจะถูกนับเป็น 0 ควรตรวจทานความถูกต้องของรหัสสินค้าที่ไม่ตรงกันระหว่างไฟล์ก่อนใช้ในการตัดสินใจทางธุรกิจ
-  </footer>
-</div>
-
-<script id="bundle-data" type="application/json">{"months_th": ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค."], "skus": [{"code": "10102001", "name": "นมพาสเจอร์ไรส์ รสจืด 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [98, 58, 54, 53, 60, 76, 74], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 473, "forecast_total": 0, "diff": 473, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 28, "dc_total": 0, "ext_total": 0, "internal_total": 441}, {"code": "10102002", "name": "นมปรุงแต่ง  รสช๊อคโกแลต 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [46, 23, 21, 21, 19, 11, 22], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 163, "forecast_total": 0, "diff": 163, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 163}, {"code": "10102003", "name": "นมปรุงแต่ง  รสชาเขียว  5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [43, 21, 16, 16, 15, 9, 16], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 136, "forecast_total": 0, "diff": 136, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 152}, {"code": "10102004", "name": "นมปรุงแต่ง  รสกาแฟ 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [27, 20, 18, 19, 21, 14, 20], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 139, "forecast_total": 0, "diff": 139, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 139}, {"code": "10102006", "name": "นมปรุงแต่ง  รสสตรอเบอร์รี  5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [29, 18, 21, 19, 16, 11, 23], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 137, "forecast_total": 0, "diff": 137, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 135}, {"code": "10102007", "name": "นมปรุงแต่ง รสชาไทย 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [35, 18, 18, 17, 14, 7, 8], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 117, "forecast_total": 0, "diff": 117, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 117}, {"code": "10102008", "name": "นมพาสเจอร์ไรส์ รสจืด 5 ลิตร", "unit": "ถุง", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [421, 1229, 732, 736, 637, 635, 927], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 5317, "forecast_total": 0, "diff": 5317, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5317, "internal_total": 0}, {"code": "10103001", "name": "นมพาสเจอร์ไรส์ รสจืด 1000 cc", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [5305, 3750, 6999, 6117, 6956, 3226, 5929], "forecast_months": [12500, 9500, 8700, 9000, 9500, 8072, 8488], "actual_total": 38282, "forecast_total": 65760, "diff": -27478, "diff_pct": -41.8, "has_actual": true, "has_forecast": true, "bu1_total": 21406, "dc_total": 0, "ext_total": 0, "internal_total": 23689}, {"code": "10103002", "name": "นมพาสเจอร์ไรส์ รสพร่องมันเนย 1000 cc", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [2340, 1605, 2449, 2256, 2622, 2635, 1034], "forecast_months": [3700, 2700, 2400, 2500, 2700, 2892, 2892], "actual_total": 14941, "forecast_total": 19784, "diff": -4843, "diff_pct": -24.5, "has_actual": true, "has_forecast": true, "bu1_total": 6938, "dc_total": 0, "ext_total": 0, "internal_total": 9970}, {"code": "10104001", "name": "นมปรุงแต่ง รสช๊อคโกแลต1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [14, 14, 44, 35, 49, 59, 46], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 261, "forecast_total": 0, "diff": 261, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 272, "dc_total": 0, "ext_total": 0, "internal_total": 82}, {"code": "10104002", "name": "นมปรุงแต่ง รสชาเขียว 1.095 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [27, 9, 32, 41, 48, 44, 55], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 256, "forecast_total": 0, "diff": 256, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 164, "dc_total": 0, "ext_total": 0, "internal_total": 90}, {"code": "10104003", "name": "นมปรุงแต่ง รสกาแฟ 1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [0, 4, 99, 85, 85, 94, 73], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 440, "forecast_total": 0, "diff": 440, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 564, "dc_total": 0, "ext_total": 0, "internal_total": 18}, {"code": "10104004", "name": "นมปรุงแต่ง รสสตรอเบอร์รี 1.095 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [9, 2, 38, 38, 45, 50, 33], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 215, "forecast_total": 0, "diff": 215, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 212, "dc_total": 0, "ext_total": 0, "internal_total": 67}, {"code": "10104006", "name": "นมปรุงแต่ง รสชาไทย 1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [4, 15, 19, 33, 38, 39, 18], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 166, "forecast_total": 0, "diff": 166, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 137, "dc_total": 0, "ext_total": 0, "internal_total": 84}, {"code": "10105001", "name": "Lactose  รสจืด 255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "actual_months": [9298, 6322, 7539, 6393, 7390, 8986, 9354], "forecast_months": [12150, 9600, 8650, 8450, 8450, 6118, 7114], "actual_total": 55282, "forecast_total": 60532, "diff": -5250, "diff_pct": -8.7, "has_actual": true, "has_forecast": true, "bu1_total": 16186, "dc_total": 0, "ext_total": 3815, "internal_total": 38078}, {"code": "10105002", "name": "Lactose  รสจืด 5000 cc.", "unit": "GL", "group": "นมไร้แลคโตส (0% Lactose)", "actual_months": [0, 2, 2221, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2223, "forecast_total": 0, "diff": 2223, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 2, "internal_total": 0}, {"code": "10106001", "name": "Lactose  รสกล้วยหอม   255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "actual_months": [4107, 2695, 4381, 2598, 2967, 3121, 3649], "forecast_months": [4000, 3450, 3000, 2850, 2850, 2670, 3136], "actual_total": 23518, "forecast_total": 21956, "diff": 1562, "diff_pct": 7.1, "has_actual": true, "has_forecast": true, "bu1_total": 5254, "dc_total": 0, "ext_total": 2742, "internal_total": 14707}, {"code": "10107001", "name": "Lactose  รสสตรอเบอร์รี่   255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "actual_months": [6789, 4114, 2539, 4078, 5036, 5050, 6084], "forecast_months": [7720, 6170, 5720, 5570, 5570, 4066, 4148], "actual_total": 33690, "forecast_total": 38964, "diff": -5274, "diff_pct": -13.5, "has_actual": true, "has_forecast": true, "bu1_total": 8565, "dc_total": 0, "ext_total": 2736, "internal_total": 26108}, {"code": "10108001", "name": "Lactose รสกาแฟลาเต้ 255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "actual_months": [2470, 1569, 1974, 1836, 2096, 2248, 2602], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14795, "forecast_total": 0, "diff": 14795, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 4736, "dc_total": 0, "ext_total": 360, "internal_total": 10837}, {"code": "10113001", "name": "นมสดสตรอเบอร์รี่ 190 ml.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [2674, 2016, 1341, 1194, 1346, 1362, 4154], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14087, "forecast_total": 0, "diff": 14087, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 11639}, {"code": "10113101", "name": "นมสดรสชาเขียวสตรอเบอร์รี 190 ml.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [1953, 1329, 950, 837, 1044, 814, 1779], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 8706, "forecast_total": 0, "diff": 8706, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 8000}, {"code": "10201001", "name": "Ice cream Fresh Milk 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [11809, 9363, 10578, 11799, 10262, 9544, 8821], "forecast_months": [12900, 9900, 10900, 10900, 10900, 10908, 11508], "actual_total": 72176, "forecast_total": 77916, "diff": -5740, "diff_pct": -7.4, "has_actual": true, "has_forecast": true, "bu1_total": 18813, "dc_total": 19169, "ext_total": 6240, "internal_total": 50399}, {"code": "10201002", "name": "Ice cream Cookie 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [4204, 3924, 3396, 4161, 3209, 2824, 3025], "forecast_months": [5400, 3400, 3400, 3400, 3400, 4892, 5660], "actual_total": 24743, "forecast_total": 29552, "diff": -4809, "diff_pct": -16.3, "has_actual": true, "has_forecast": true, "bu1_total": 5885, "dc_total": 6648, "ext_total": 4476, "internal_total": 15024}, {"code": "10201003", "name": "Ice cream Rum Raisins 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [2650, 2409, 2700, 3394, 3000, 2595, 2468], "forecast_months": [4400, 3400, 3400, 3400, 3400, 4892, 5660], "actual_total": 19216, "forecast_total": 28552, "diff": -9336, "diff_pct": -32.7, "has_actual": true, "has_forecast": true, "bu1_total": 4972, "dc_total": 6049, "ext_total": 2784, "internal_total": 11798}, {"code": "10201004", "name": "Ice cream Strawberry 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [3479, 2933, 2892, 3838, 2964, 2700, 3151], "forecast_months": [5000, 3500, 4000, 4000, 4000, 5500, 4324], "actual_total": 21957, "forecast_total": 30324, "diff": -8367, "diff_pct": -27.6, "has_actual": true, "has_forecast": true, "bu1_total": 5213, "dc_total": 5776, "ext_total": 3384, "internal_total": 13190}, {"code": "10201005", "name": "Ice cream Vanila 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [2834, 2645, 2555, 3416, 1853, 2336, 2028], "forecast_months": [4900, 3400, 3400, 3400, 3400, 3384, 3336], "actual_total": 17667, "forecast_total": 25220, "diff": -7553, "diff_pct": -29.9, "has_actual": true, "has_forecast": true, "bu1_total": 5092, "dc_total": 5400, "ext_total": 2928, "internal_total": 10704}, {"code": "10201008", "name": "Ice cream chocolate 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [5326, 4565, 4477, 5240, 5513, 3955, 4286], "forecast_months": [5900, 4400, 4900, 4900, 4900, 4384, 6160], "actual_total": 33362, "forecast_total": 35544, "diff": -2182, "diff_pct": -6.1, "has_actual": true, "has_forecast": true, "bu1_total": 8332, "dc_total": 9555, "ext_total": 4968, "internal_total": 20378}, {"code": "10201009", "name": "Ice cream Copico 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [3274, 3029, 3609, 4451, 3220, 3357, 3297], "forecast_months": [4900, 4400, 4400, 4400, 4400, 5392, 6160], "actual_total": 24237, "forecast_total": 34052, "diff": -9815, "diff_pct": -28.8, "has_actual": true, "has_forecast": true, "bu1_total": 7554, "dc_total": 8250, "ext_total": 4032, "internal_total": 13564}, {"code": "10201010", "name": "Ice cream Green Tea 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [3581, 2669, 2581, 3127, 2743, 2001, 2318], "forecast_months": [3800, 2800, 2800, 2800, 2800, 3284, 4124], "actual_total": 19020, "forecast_total": 22408, "diff": -3388, "diff_pct": -15.1, "has_actual": true, "has_forecast": true, "bu1_total": 4564, "dc_total": 5254, "ext_total": 3024, "internal_total": 10881}, {"code": "10202001", "name": "Ice cream Fresh Milk 320 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [456, 408, 768, 1120, 540, 626, 750], "forecast_months": [1420, 1420, 1420, 1420, 1420, 1100, 1130], "actual_total": 4668, "forecast_total": 9330, "diff": -4662, "diff_pct": -50.0, "has_actual": true, "has_forecast": true, "bu1_total": 2144, "dc_total": 1584, "ext_total": 0, "internal_total": 2712}, {"code": "10202002", "name": "I/C Cookie 320 g.", "unit": "ถ้วย", "group": "อื่นๆ (Others)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10202003", "name": "I/C Chocolate 320 g.", "unit": "ถ้วย", "group": "อื่นๆ (Others)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10202004", "name": "I/C Copico 320 g.", "unit": "ถ้วย", "group": "อื่นๆ (Others)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 42, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10204001", "name": "Ice cream Fresh Milk 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [370, 256, 369, 453, 289, 340, 470], "forecast_months": [510, 510, 510, 510, 510, 298, 310], "actual_total": 2547, "forecast_total": 3158, "diff": -611, "diff_pct": -19.3, "has_actual": true, "has_forecast": true, "bu1_total": 846, "dc_total": 513, "ext_total": 0, "internal_total": 1915}, {"code": "10204002", "name": "Ice cream Cookie 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [121, 91, 143, 178, 94, 123, 177], "forecast_months": [200, 200, 200, 200, 200, 162, 105], "actual_total": 927, "forecast_total": 1267, "diff": -340, "diff_pct": -26.8, "has_actual": true, "has_forecast": true, "bu1_total": 333, "dc_total": 195, "ext_total": 0, "internal_total": 664}, {"code": "10204003", "name": "Ice cream Rum Raisins 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [91, 79, 125, 153, 97, 106, 163], "forecast_months": [215, 215, 215, 215, 215, 139, 115], "actual_total": 814, "forecast_total": 1329, "diff": -515, "diff_pct": -38.8, "has_actual": true, "has_forecast": true, "bu1_total": 307, "dc_total": 177, "ext_total": 0, "internal_total": 564}, {"code": "10204004", "name": "Ice cream Strawberry 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [105, 79, 107, 141, 77, 87, 137], "forecast_months": [160, 160, 160, 160, 160, 116, 85], "actual_total": 733, "forecast_total": 1001, "diff": -268, "diff_pct": -26.8, "has_actual": true, "has_forecast": true, "bu1_total": 230, "dc_total": 147, "ext_total": 0, "internal_total": 550}, {"code": "10204005", "name": "Ice cream Vanila 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [86, 58, 80, 118, 65, 65, 113], "forecast_months": [105, 105, 105, 105, 105, 101, 53], "actual_total": 585, "forecast_total": 679, "diff": -94, "diff_pct": -13.8, "has_actual": true, "has_forecast": true, "bu1_total": 178, "dc_total": 123, "ext_total": 0, "internal_total": 440}, {"code": "10204006", "name": "ไอศกรีมนมสดชาไทย 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [41, 21, 35, 45, 28, 25, 35], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 230, "forecast_total": 0, "diff": 230, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 82, "dc_total": 39, "ext_total": 0, "internal_total": 160}, {"code": "10204008", "name": "Ice cream Chocolate 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [144, 101, 156, 203, 111, 133, 207], "forecast_months": [215, 215, 215, 215, 215, 167, 115], "actual_total": 1055, "forecast_total": 1357, "diff": -302, "diff_pct": -22.3, "has_actual": true, "has_forecast": true, "bu1_total": 400, "dc_total": 225, "ext_total": 0, "internal_total": 739}, {"code": "10204009", "name": "Ice cream Copico 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [78, 55, 107, 147, 75, 88, 151], "forecast_months": [200, 200, 200, 200, 200, 126, 105], "actual_total": 701, "forecast_total": 1231, "diff": -530, "diff_pct": -43.1, "has_actual": true, "has_forecast": true, "bu1_total": 295, "dc_total": 183, "ext_total": 0, "internal_total": 456}, {"code": "10204010", "name": "Ice cream Green Tea 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [71, 46, 74, 102, 49, 66, 90], "forecast_months": [160, 160, 160, 160, 160, 116, 85], "actual_total": 498, "forecast_total": 1001, "diff": -503, "diff_pct": -50.2, "has_actual": true, "has_forecast": true, "bu1_total": 185, "dc_total": 117, "ext_total": 0, "internal_total": 351}, {"code": "10204012", "name": "Lime (รสมะนาว)2.5 kg.", "unit": "ถาด", "group": "อื่นๆ (Others)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [120, 120, 120, 120, 120, 78, 30], "actual_total": 0, "forecast_total": 708, "diff": -708, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10204013", "name": "ไอศกรีมรสน้อยหน่า  2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [1, 1, 5, 6, 2, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 15, "forecast_total": 0, "diff": 15, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 21, "dc_total": 6, "ext_total": 0, "internal_total": 7}, {"code": "10206001", "name": "ไอศกรีมซอฟต์เสิร์ฟ 5 kg.", "unit": "กล.", "group": "ไอศกรีม (Ice Cream)", "actual_months": [50, 34, 82, 103, 92, 93, 120], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 574, "forecast_total": 0, "diff": 574, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 222, "dc_total": 0, "ext_total": 72, "internal_total": 215}, {"code": "10206002", "name": "ไอศกรีมซอฟต์เสิร์ฟ 1 kg.", "unit": "ขวด", "group": "ไอศกรีม (Ice Cream)", "actual_months": [4, 5, 10, 1, 13, 9, 8], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 50, "forecast_total": 0, "diff": 50, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 50}, {"code": "10207001", "name": "ไอศกรีม ถ้วยชิม Fresh Milk 8 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "actual_months": [6699, 1925, 3080, 1155, 1540, 1925, 4235], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 20559, "forecast_total": 0, "diff": 20559, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208001", "name": "ไอศกรีมรสนมสด 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [343, 398, 478, 441, 1092, 597, 562], "forecast_months": [507, 507, 507, 507, 507, 495, 500], "actual_total": 3911, "forecast_total": 3530, "diff": 381, "diff_pct": 10.8, "has_actual": true, "has_forecast": true, "bu1_total": 230, "dc_total": 1971, "ext_total": 288, "internal_total": 2689}, {"code": "10208002", "name": "ไอศกรีมรสช็อคโกแลต 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [90, 83, 110, 131, 386, 155, 137], "forecast_months": [147, 147, 147, 147, 147, 145, 145], "actual_total": 1092, "forecast_total": 1025, "diff": 67, "diff_pct": 6.5, "has_actual": true, "has_forecast": true, "bu1_total": 86, "dc_total": 568, "ext_total": 135, "internal_total": 617}, {"code": "10208003", "name": "ไอศกรีมรสคุกกี้ 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [40, 41, 43, 143, 99, 77, 63], "forecast_months": [91, 91, 91, 91, 91, 95, 95], "actual_total": 506, "forecast_total": 645, "diff": -139, "diff_pct": -21.6, "has_actual": true, "has_forecast": true, "bu1_total": 36, "dc_total": 305, "ext_total": 1, "internal_total": 347}, {"code": "10208004", "name": "ไอศกรีมรสรัมเรซิน 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [47, 56, 81, 105, 298, 129, 80], "forecast_months": [121, 121, 121, 121, 121, 120, 120], "actual_total": 796, "forecast_total": 845, "diff": -49, "diff_pct": -5.8, "has_actual": true, "has_forecast": true, "bu1_total": 37, "dc_total": 424, "ext_total": 1, "internal_total": 547}, {"code": "10208005", "name": "ไอศกรีมรสสตรอเบอร์รี 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [24, 38, 47, 60, 154, 54, 43], "forecast_months": [77, 77, 77, 77, 77, 72, 72], "actual_total": 420, "forecast_total": 529, "diff": -109, "diff_pct": -20.6, "has_actual": true, "has_forecast": true, "bu1_total": 33, "dc_total": 261, "ext_total": 1, "internal_total": 278}, {"code": "10208006", "name": "ไอศกรีมรสกาแฟ 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [47, 41, 57, 95, 172, 84, 64], "forecast_months": [94, 94, 94, 94, 94, 95, 95], "actual_total": 560, "forecast_total": 660, "diff": -100, "diff_pct": -15.2, "has_actual": true, "has_forecast": true, "bu1_total": 24, "dc_total": 315, "ext_total": 1, "internal_total": 395}, {"code": "10208007", "name": "ไอศกรีมรสชาเขียว 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [28, 25, 56, 100, 145, 78, 67], "forecast_months": [85, 85, 85, 85, 85, 90, 90], "actual_total": 499, "forecast_total": 605, "diff": -106, "diff_pct": -17.5, "has_actual": true, "has_forecast": true, "bu1_total": 48, "dc_total": 312, "ext_total": 74, "internal_total": 252}, {"code": "10208008", "name": "Ice cream มะนาว  2.5 kg. (กล่อง)  ", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [37, 37, 37, 37, 37, 37, 37], "actual_total": 0, "forecast_total": 259, "diff": -259, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208009", "name": "ไอศกรีมนมสดชาไทย 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [27, 29, 30, 30, 103, 22, 19], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 260, "forecast_total": 0, "diff": 260, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 6, "dc_total": 125, "ext_total": 0, "internal_total": 182}, {"code": "10208010", "name": "ไอศกรีมรสน้อยหน่า 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [0, 1, 1, 0, 0, 0, 23], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 25, "forecast_total": 0, "diff": 25, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 3, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208011", "name": "ไอศกรีมรสวานิลา 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [56, 35, 70, 101, 173, 90, 80], "forecast_months": [165, 165, 165, 165, 165, 170, 170], "actual_total": 605, "forecast_total": 1165, "diff": -560, "diff_pct": -48.1, "has_actual": true, "has_forecast": true, "bu1_total": 35, "dc_total": 317, "ext_total": 1, "internal_total": 424}, {"code": "10208012", "name": "ไอศกรีมนมกลิ่นวานิลา (ตรา อืมม มิลค์)  2.5 kg.(กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "actual_months": [30, 40, 50, 85, 103, 55, 75], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 438, "forecast_total": 0, "diff": 438, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 213, "ext_total": 365, "internal_total": 0}, {"code": "10301001", "name": "Yoghurt Plain 150 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "actual_months": [2171, 1532, 2425, 2378, 3028, 2715, 2422], "forecast_months": [5500, 5000, 5000, 4500, 4500, 4200, 4320], "actual_total": 16671, "forecast_total": 33020, "diff": -16349, "diff_pct": -49.5, "has_actual": true, "has_forecast": true, "bu1_total": 8036, "dc_total": 0, "ext_total": 0, "internal_total": 10492}, {"code": "10302002", "name": "กรีกโยเกิร์ต (Greek Yogurt)  10 kg./ถุง", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "actual_months": [2977, 30, 640, 80, 510, 120, 120], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 4477, "forecast_total": 0, "diff": 4477, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 1500, "internal_total": 0}, {"code": "10302003", "name": "กรีกโยเกิร์ต (GreekYogurt)  150 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "actual_months": [525, 2577, 23483, 3085, 3233, 3733, 4109], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 40745, "forecast_total": 0, "diff": 40745, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 8762, "dc_total": 0, "ext_total": 4402, "internal_total": 12154}, {"code": "10302004", "name": "กรีกโยเกิร์ต (GreekYogurt)  400 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "actual_months": [500, 1054, 1116, 637, 894, 899, 1209], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 6309, "forecast_total": 0, "diff": 6309, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 1262, "dc_total": 0, "ext_total": 2908, "internal_total": 2377}, {"code": "10302005", "name": "(GF) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "actual_months": [1625, 500, 605, 670, 216, 840, 504], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 4960, "forecast_total": 0, "diff": 4960, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 4335, "internal_total": 0}, {"code": "10302006", "name": "(AC) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "actual_months": [1625, 1963, 1382, 1172, 1318, 1415, 1414], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 10289, "forecast_total": 0, "diff": 10289, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 10284, "internal_total": 0}, {"code": "10302007", "name": "(NV) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "actual_months": [200, 101, 200, 100, 210, 200, 105], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 1116, "forecast_total": 0, "diff": 1116, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 1105, "internal_total": 0}, {"code": "10303001", "name": "Set Yogurt 1.8 kg./กระปุก", "unit": "กระปุก", "group": "โยเกิร์ต (Yogurt)", "actual_months": [7, 7, 32, 32, 42, 49, 38], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 207, "forecast_total": 0, "diff": 207, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 171, "dc_total": 0, "ext_total": 0, "internal_total": 59}, {"code": "10303002", "name": "Set Yogurt 1.5 kg./ถุง", "unit": "ถุง", "group": "โยเกิร์ต (Yogurt)", "actual_months": [459, 459, 453, 314, 457, 375, 412], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2929, "forecast_total": 0, "diff": 2929, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 2929, "internal_total": 0}, {"code": "10304102", "name": "Yogurt Softserved  5 kg./GL", "unit": "GL", "group": "โยเกิร์ต (Yogurt)", "actual_months": [17, 12, 0, 41, 43, 29, 29], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 171, "forecast_total": 0, "diff": 171, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 71, "internal_total": 68}, {"code": "10305001", "name": "Drinking โยเกิร์ต รสนมสด 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [4457, 2931, 3840, 3342, 3939, 4140, 5171], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 27820, "forecast_total": 0, "diff": 27820, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 9845, "dc_total": 0, "ext_total": 3294, "internal_total": 16494}, {"code": "10305002", "name": "Drinking โยเกิร์ต รสนมสด 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [37, 11, 13, 9, 7, 5, 33], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 115, "forecast_total": 0, "diff": 115, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 30, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10305101", "name": "Drinking โยเกิร์ต รสส้มยูสุ 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [2592, 1592, 1924, 1612, 1986, 2002, 2593], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14301, "forecast_total": 0, "diff": 14301, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3709, "dc_total": 0, "ext_total": 2486, "internal_total": 8457}, {"code": "10305102", "name": "Drinking โยเกิร์ต รสส้มยูสุ 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [24, 11, 13, 9, 6, 8, 40], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 111, "forecast_total": 0, "diff": 111, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 37, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10305201", "name": "Drinking โยเกิร์ต รสสตรอเบอร์รี่ 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [4798, 3151, 3439, 2844, 3637, 3437, 4322], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 25628, "forecast_total": 0, "diff": 25628, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 7573, "dc_total": 0, "ext_total": 3205, "internal_total": 15776}, {"code": "10305202", "name": "Drinking โยเกิร์ต รสสตรอเบอร์รี่ 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [34, 11, 13, 9, 8, 5, 39], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 119, "forecast_total": 0, "diff": 119, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 36, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10306001", "name": "โยเกิร์ตรสบลูเบอร์รี 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [706, 288, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 994, "forecast_total": 0, "diff": 994, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 986}, {"code": "10306101", "name": "โยเกิร์ตรสพีช 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [428, 106, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 534, "forecast_total": 0, "diff": 534, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 518}, {"code": "10306201", "name": "โยเกิร์ตรสสตรอเบอร์รี 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [1042, 237, 8, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 1287, "forecast_total": 0, "diff": 1287, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 1217}, {"code": "10306301", "name": "โยเกิร์ตรสส้มยูสุ 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [418, 145, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 563, "forecast_total": 0, "diff": 563, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 545}, {"code": "10307001", "name": "Stir Yogurt 5 kg. (ถุง)", "unit": "ถุง", "group": "โยเกิร์ต (Yogurt)", "actual_months": [0, 5172, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 5172, "forecast_total": 0, "diff": 5172, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5169, "internal_total": 0}, {"code": "10307002", "name": "Stir Yogurt 5 kg. (GL)", "unit": "GL", "group": "โยเกิร์ต (Yogurt)", "actual_months": [0, 105, 14109, 17295, 13693, 19208, 25468], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 89878, "forecast_total": 0, "diff": 89878, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 18, "dc_total": 0, "ext_total": 89817, "internal_total": 8}, {"code": "10307004", "name": "Stir Yogurt 1 kg./ขวด", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "actual_months": [0, 4, 1779, 822, 1293, 1207, 1056], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 6161, "forecast_total": 0, "diff": 6161, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5867, "internal_total": 5}, {"code": "10401001", "name": "ท็อฟฟี่รสนม 120 g.", "unit": "ถุง", "group": "ทอฟฟี่นม (Toffee-Milk)", "actual_months": [5124, 2760, 3886, 3364, 3835, 4154, 5513], "forecast_months": [4802, 4802, 4802, 4802, 4802, 3432, 4416], "actual_total": 28636, "forecast_total": 31858, "diff": -3222, "diff_pct": -10.1, "has_actual": true, "has_forecast": true, "bu1_total": 4058, "dc_total": 0, "ext_total": 72, "internal_total": 24564}, {"code": "10501001", "name": "Mix Fresh Milk  1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [54, 40, 125, 158, 155, 124, 160], "forecast_months": [443, 443, 443, 443, 443, 300, 300], "actual_total": 816, "forecast_total": 2815, "diff": -1999, "diff_pct": -71.0, "has_actual": true, "has_forecast": true, "bu1_total": 460, "dc_total": 0, "ext_total": 0, "internal_total": 496}, {"code": "10501003", "name": "Copico Mix 1.113 kg.", "unit": "ขวด", "group": "อื่นๆ (Others)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 0, "forecast_total": 0, "diff": 0, "diff_pct": 0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10601001", "name": "Whipping Cream 1000 cc", "unit": "ขวด", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "actual_months": [276, 192, 246, 310, 302, 264, 372], "forecast_months": [432, 432, 432, 432, 432, 160, 160], "actual_total": 1962, "forecast_total": 2480, "diff": -518, "diff_pct": -20.9, "has_actual": true, "has_forecast": true, "bu1_total": 363, "dc_total": 0, "ext_total": 0, "internal_total": 1013}, {"code": "10601003", "name": "Whipping Cream  5 kgs.", "unit": "kg.", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "actual_months": [9435, 10935, 9390, 12285, 6795, 7285, 2790], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 58915, "forecast_total": 0, "diff": 58915, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 58364, "internal_total": 0}, {"code": "10601004", "name": "Whipping Cream  5 kgs./GL", "unit": "GL", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "actual_months": [90, 24, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 114, "forecast_total": 0, "diff": 114, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 114, "internal_total": 0}, {"code": "10701001", "name": "นมอัดเม็ด รสหวาน 55 g.", "unit": "ขวด", "group": "อื่นๆ (Others)", "actual_months": [13651, 6875, 9160, 8503, 11952, 11236, 15169], "forecast_months": [7800, 7800, 7800, 7800, 7800, 9184, 9344], "actual_total": 76546, "forecast_total": 57528, "diff": 19018, "diff_pct": 33.1, "has_actual": true, "has_forecast": true, "bu1_total": 11932, "dc_total": 0, "ext_total": 72, "internal_total": 63416}, {"code": "10701002", "name": "นมอัดเม็ด รสมอลล์ 55 g.", "unit": "ขวด", "group": "อื่นๆ (Others)", "actual_months": [6603, 3672, 5177, 5143, 6882, 6480, 8374], "forecast_months": [4500, 4500, 4500, 4500, 4500, 5748, 4480], "actual_total": 42331, "forecast_total": 32728, "diff": 9603, "diff_pct": 29.3, "has_actual": true, "has_forecast": true, "bu1_total": 5835, "dc_total": 0, "ext_total": 48, "internal_total": 35902}, {"code": "10702001", "name": "นมปรุงแต่งพร่องมันเนยชนิดเม็ดรสหวาน 20g.", "unit": "ซอง", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [22504, 14160, 6106, 3854, 24827, 24766, 27797], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 124014, "forecast_total": 0, "diff": 124014, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 11822, "dc_total": 0, "ext_total": 45000, "internal_total": 66290}, {"code": "11001001", "name": "Fresh Milk Chocolate 100 g.", "unit": "แพ๊ก", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_months": [1237, 660, 908, 789, 861, 749, 902], "forecast_months": [1002, 1002, 1002, 1002, 1002, 930, 1050], "actual_total": 6106, "forecast_total": 6990, "diff": -884, "diff_pct": -12.6, "has_actual": true, "has_forecast": true, "bu1_total": 911, "dc_total": 0, "ext_total": 10, "internal_total": 5111}, {"code": "11101004", "name": "Cheddar Cheese Slice 500 g.", "unit": "kg.", "group": "ชีส (Cheese)", "actual_months": [74.5, 98.5, 66.5, 64, 80, 72.5, 113], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 569.0, "forecast_total": 0, "diff": 569.0, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 554.5}, {"code": "11101007", "name": "โพรเซสชีส เชดด้า สไลซ์ 250 กรัม (12 แผ่น)", "unit": "ซอง", "group": "ชีส (Cheese)", "actual_months": [237, 108, 50, 16, 50, 45, 19], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 525, "forecast_total": 0, "diff": 525, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3, "dc_total": 0, "ext_total": 0, "internal_total": 849}, {"code": "11101008", "name": "โพรเซสชีส เชดด้า ลูกเต๋า 100 กรัม", "unit": "ถ้วย", "group": "ชีส (Cheese)", "actual_months": [632, 195, 146, 149, 888, 267, 285], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2562, "forecast_total": 0, "diff": 2562, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 6, "dc_total": 0, "ext_total": 0, "internal_total": 1551}, {"code": "11101009", "name": "โพรเซสชีส เชดด้า แบบแท่ง 20 กรัม", "unit": "ซอง", "group": "ชีส (Cheese)", "actual_months": [7818, 2769, 3022, 2840, 3355, 3986, 4683], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 28473, "forecast_total": 0, "diff": 28473, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3165, "dc_total": 0, "ext_total": 0, "internal_total": 25274}, {"code": "11101010", "name": "โพรเซสชีส เชดด้า แบบแท่ง 15 กรัม (ชิม)", "unit": "ซอง", "group": "ชีส (Cheese)", "actual_months": [1111, 450, 445, 450, 250, 200, 350], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 3256, "forecast_total": 0, "diff": 3256, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 26, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "11201001", "name": "Chedar Cheese Candy 70 g.", "unit": "ขวด", "group": "ชีส (Cheese)", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 0, "forecast_total": 0, "diff": 0, "diff_pct": 0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "11301001", "name": "Fresh Curd", "unit": "kg.", "group": "อื่นๆ (Others)", "actual_months": [2679, 3055, 3027.5, 1456, 1516, 1669.5, 1084], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14487.0, "forecast_total": 0, "diff": 14487.0, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3.5, "dc_total": 0, "ext_total": 14482.5, "internal_total": 0}, {"code": "11402001", "name": "FZN MDL Shredded Cheese  (ชีสขูด)", "unit": "kg.", "group": "ชีส (Cheese)", "actual_months": [65, 154, 190, 150, 140, 100, 185], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 984, "forecast_total": 0, "diff": 984, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 1, "dc_total": 0, "ext_total": 0, "internal_total": 673}, {"code": "11402003", "name": "มอสเซเรลล่าชีส แบบขูด 100 กรัม", "unit": "ถ้วย", "group": "ชีส (Cheese)", "actual_months": [64, 11, 7, 0, 0, 220, 45], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 347, "forecast_total": 0, "diff": 347, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 7, "dc_total": 0, "ext_total": 0, "internal_total": 61}], "groups": {"นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)": {"actual": 214772, "forecast": 95349, "skus": 19}, "นมไร้แลคโตส (0% Lactose)": {"actual": 129508, "forecast": 121452, "skus": 5}, "ไอศกรีม (Ice Cream)": {"actual": 275446, "forecast": 313184, "skus": 34}, "อื่นๆ (Others)": {"actual": 133364.0, "forecast": 99814, "skus": 8}, "โยเกิร์ต (Yogurt)": {"actual": 260557, "forecast": 33020, "skus": 23}, "ทอฟฟี่นม (Toffee-Milk)": {"actual": 28636, "forecast": 31858, "skus": 1}, "วิปปิ้ง/เนย (Mix,Whipping)": {"actual": 60991, "forecast": 2480, "skus": 3}, "ชีส (Cheese)": {"actual": 36716.0, "forecast": 0, "skus": 8}}, "kpi": {"total_actual": 1139990.0, "total_forecast": 697157, "diff": 442833.0, "diff_pct": 63.5, "sku_count": 101, "matched_count": 44, "only_actual_count": 50, "only_forecast_count": 7, "over_count": 12, "under_count": 32, "monthly_actual": [178191.5, 128473.5, 167883.0, 145046, 165473, 164835.0, 190088], "monthly_forecast": [118148, 96998, 96048, 95448, 96148, 94130, 100237], "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"]}, "channels": {"BU1": 208781.5, "ศูนย์กระจายสินค้า": 74221, "ลูกค้าภายนอก": 303281.5, "ลูกค้าภายใน": 599918.5}, "order_week": {"shop_totals": {"FAS": 5.0, "CTR2": 6.0, "PSM": 5.0, "B6เหลี่ยม": 25.0, "SHRS": 9.0, "T RS": 4.0, "ต.เสรี": 4.0, "B2": 10.0, "บ้านสวน2": 3.0, "บ้านสวน2.2": 2.0, "B1": 14.0, "Event": 4.0, "บ้านสวน3": 2.0}, "day_totals": {"2026-06-24": 10, "2026-06-26": 7, "2026-06-27": 5, "2026-06-28": 6, "2026-06-29": 4, "2026-06-30": 12}}}</script>
+<script id="bundle-data" type="application/json">{"months_th": ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค."], "skus": [{"code": "10102001", "name": "นมพาสเจอร์ไรส์ รสจืด 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [98, 58, 54, 53, 60, 76, 74], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 473, "forecast_total": 0, "diff": 473, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 28, "dc_total": 0, "ext_total": 0, "internal_total": 441}, {"code": "10102002", "name": "นมปรุงแต่ง  รสช๊อคโกแลต 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [46, 23, 21, 21, 19, 11, 22], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 163, "forecast_total": 0, "diff": 163, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 163}, {"code": "10102003", "name": "นมปรุงแต่ง  รสชาเขียว  5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [43, 21, 16, 16, 15, 9, 16], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 136, "forecast_total": 0, "diff": 136, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 152}, {"code": "10102004", "name": "นมปรุงแต่ง  รสกาแฟ 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [27, 20, 18, 19, 21, 14, 20], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 139, "forecast_total": 0, "diff": 139, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 139}, {"code": "10102006", "name": "นมปรุงแต่ง  รสสตรอเบอร์รี  5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [29, 18, 21, 19, 16, 11, 23], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 137, "forecast_total": 0, "diff": 137, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 135}, {"code": "10102007", "name": "นมปรุงแต่ง รสชาไทย 5000 cc", "unit": "GL", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [35, 18, 18, 17, 14, 7, 8], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 117, "forecast_total": 0, "diff": 117, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 117}, {"code": "10102008", "name": "นมพาสเจอร์ไรส์ รสจืด 5 ลิตร", "unit": "ถุง", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [421, 1229, 732, 736, 637, 635, 927], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 5317, "forecast_total": 0, "diff": 5317, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5317, "internal_total": 0}, {"code": "10103001", "name": "นมพาสเจอร์ไรส์ รสจืด 1000 cc", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [5305, 3750, 6999, 6117, 6956, 3226, 5929], "forecast_months": [12500, 9500, 8700, 9000, 9500, 8072, 8488], "actual_total": 38282, "forecast_total": 65760, "diff": -27478, "diff_pct": -41.8, "has_actual": true, "has_forecast": true, "bu1_total": 21406, "dc_total": 0, "ext_total": 0, "internal_total": 23689}, {"code": "10103002", "name": "นมพาสเจอร์ไรส์ รสพร่องมันเนย 1000 cc", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [2340, 1605, 2449, 2256, 2622, 2635, 1034], "forecast_months": [3700, 2700, 2400, 2500, 2700, 2892, 2892], "actual_total": 14941, "forecast_total": 19784, "diff": -4843, "diff_pct": -24.5, "has_actual": true, "has_forecast": true, "bu1_total": 6938, "dc_total": 0, "ext_total": 0, "internal_total": 9970}, {"code": "10104001", "name": "นมปรุงแต่ง รสช๊อคโกแลต1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [14, 14, 44, 35, 49, 59, 46], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 261, "forecast_total": 0, "diff": 261, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 272, "dc_total": 0, "ext_total": 0, "internal_total": 82}, {"code": "10104002", "name": "นมปรุงแต่ง รสชาเขียว 1.095 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [27, 9, 32, 41, 48, 44, 55], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 256, "forecast_total": 0, "diff": 256, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 164, "dc_total": 0, "ext_total": 0, "internal_total": 90}, {"code": "10104003", "name": "นมปรุงแต่ง รสกาแฟ 1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [0, 4, 99, 85, 85, 94, 73], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 440, "forecast_total": 0, "diff": 440, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 564, "dc_total": 0, "ext_total": 0, "internal_total": 18}, {"code": "10104004", "name": "นมปรุงแต่ง รสสตรอเบอร์รี 1.095 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [9, 2, 38, 38, 45, 50, 33], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 215, "forecast_total": 0, "diff": 215, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 212, "dc_total": 0, "ext_total": 0, "internal_total": 67}, {"code": "10104006", "name": "นมปรุงแต่ง รสชาไทย 1.085 kg.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [4, 15, 19, 33, 38, 39, 18], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 166, "forecast_total": 0, "diff": 166, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 137, "dc_total": 0, "ext_total": 0, "internal_total": 84}, {"code": "10105001", "name": "Lactose  รสจืด 255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "group_key": "Lactose", "actual_months": [9298, 6322, 7539, 6393, 7390, 8986, 9354], "forecast_months": [12150, 9600, 8650, 8450, 8450, 6118, 7114], "actual_total": 55282, "forecast_total": 60532, "diff": -5250, "diff_pct": -8.7, "has_actual": true, "has_forecast": true, "bu1_total": 16186, "dc_total": 0, "ext_total": 3815, "internal_total": 38078}, {"code": "10105002", "name": "Lactose  รสจืด 5000 cc.", "unit": "GL", "group": "นมไร้แลคโตส (0% Lactose)", "group_key": "Lactose", "actual_months": [0, 2, 2221, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2223, "forecast_total": 0, "diff": 2223, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 2, "internal_total": 0}, {"code": "10106001", "name": "Lactose  รสกล้วยหอม   255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "group_key": "Lactose", "actual_months": [4107, 2695, 4381, 2598, 2967, 3121, 3649], "forecast_months": [4000, 3450, 3000, 2850, 2850, 2670, 3136], "actual_total": 23518, "forecast_total": 21956, "diff": 1562, "diff_pct": 7.1, "has_actual": true, "has_forecast": true, "bu1_total": 5254, "dc_total": 0, "ext_total": 2742, "internal_total": 14707}, {"code": "10107001", "name": "Lactose  รสสตรอเบอร์รี่   255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "group_key": "Lactose", "actual_months": [6789, 4114, 2539, 4078, 5036, 5050, 6084], "forecast_months": [7720, 6170, 5720, 5570, 5570, 4066, 4148], "actual_total": 33690, "forecast_total": 38964, "diff": -5274, "diff_pct": -13.5, "has_actual": true, "has_forecast": true, "bu1_total": 8565, "dc_total": 0, "ext_total": 2736, "internal_total": 26108}, {"code": "10108001", "name": "Lactose รสกาแฟลาเต้ 255 ml.", "unit": "ขวด", "group": "นมไร้แลคโตส (0% Lactose)", "group_key": "Lactose", "actual_months": [2470, 1569, 1974, 1836, 2096, 2248, 2602], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14795, "forecast_total": 0, "diff": 14795, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 4736, "dc_total": 0, "ext_total": 360, "internal_total": 10837}, {"code": "10113001", "name": "นมสดสตรอเบอร์รี่ 190 ml.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [2674, 2016, 1341, 1194, 1346, 1362, 4154], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14087, "forecast_total": 0, "diff": 14087, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 11639}, {"code": "10113101", "name": "นมสดรสชาเขียวสตรอเบอร์รี 190 ml.", "unit": "ขวด", "group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "group_key": "PastMilk", "actual_months": [1953, 1329, 950, 837, 1044, 814, 1779], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 8706, "forecast_total": 0, "diff": 8706, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 8000}, {"code": "10201001", "name": "Ice cream Fresh Milk 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [11809, 9363, 10578, 11799, 10262, 9544, 8821], "forecast_months": [12900, 9900, 10900, 10900, 10900, 10908, 11508], "actual_total": 72176, "forecast_total": 77916, "diff": -5740, "diff_pct": -7.4, "has_actual": true, "has_forecast": true, "bu1_total": 18813, "dc_total": 19169, "ext_total": 6240, "internal_total": 50399}, {"code": "10201002", "name": "Ice cream Cookie 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [4204, 3924, 3396, 4161, 3209, 2824, 3025], "forecast_months": [5400, 3400, 3400, 3400, 3400, 4892, 5660], "actual_total": 24743, "forecast_total": 29552, "diff": -4809, "diff_pct": -16.3, "has_actual": true, "has_forecast": true, "bu1_total": 5885, "dc_total": 6648, "ext_total": 4476, "internal_total": 15024}, {"code": "10201003", "name": "Ice cream Rum Raisins 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [2650, 2409, 2700, 3394, 3000, 2595, 2468], "forecast_months": [4400, 3400, 3400, 3400, 3400, 4892, 5660], "actual_total": 19216, "forecast_total": 28552, "diff": -9336, "diff_pct": -32.7, "has_actual": true, "has_forecast": true, "bu1_total": 4972, "dc_total": 6049, "ext_total": 2784, "internal_total": 11798}, {"code": "10201004", "name": "Ice cream Strawberry 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [3479, 2933, 2892, 3838, 2964, 2700, 3151], "forecast_months": [5000, 3500, 4000, 4000, 4000, 5500, 4324], "actual_total": 21957, "forecast_total": 30324, "diff": -8367, "diff_pct": -27.6, "has_actual": true, "has_forecast": true, "bu1_total": 5213, "dc_total": 5776, "ext_total": 3384, "internal_total": 13190}, {"code": "10201005", "name": "Ice cream Vanila 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [2834, 2645, 2555, 3416, 1853, 2336, 2028], "forecast_months": [4900, 3400, 3400, 3400, 3400, 3384, 3336], "actual_total": 17667, "forecast_total": 25220, "diff": -7553, "diff_pct": -29.9, "has_actual": true, "has_forecast": true, "bu1_total": 5092, "dc_total": 5400, "ext_total": 2928, "internal_total": 10704}, {"code": "10201008", "name": "Ice cream chocolate 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [5326, 4565, 4477, 5240, 5513, 3955, 4286], "forecast_months": [5900, 4400, 4900, 4900, 4900, 4384, 6160], "actual_total": 33362, "forecast_total": 35544, "diff": -2182, "diff_pct": -6.1, "has_actual": true, "has_forecast": true, "bu1_total": 8332, "dc_total": 9555, "ext_total": 4968, "internal_total": 20378}, {"code": "10201009", "name": "Ice cream Copico 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [3274, 3029, 3609, 4451, 3220, 3357, 3297], "forecast_months": [4900, 4400, 4400, 4400, 4400, 5392, 6160], "actual_total": 24237, "forecast_total": 34052, "diff": -9815, "diff_pct": -28.8, "has_actual": true, "has_forecast": true, "bu1_total": 7554, "dc_total": 8250, "ext_total": 4032, "internal_total": 13564}, {"code": "10201010", "name": "Ice cream Green Tea 85 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [3581, 2669, 2581, 3127, 2743, 2001, 2318], "forecast_months": [3800, 2800, 2800, 2800, 2800, 3284, 4124], "actual_total": 19020, "forecast_total": 22408, "diff": -3388, "diff_pct": -15.1, "has_actual": true, "has_forecast": true, "bu1_total": 4564, "dc_total": 5254, "ext_total": 3024, "internal_total": 10881}, {"code": "10202001", "name": "Ice cream Fresh Milk 320 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [456, 408, 768, 1120, 540, 626, 750], "forecast_months": [1420, 1420, 1420, 1420, 1420, 1100, 1130], "actual_total": 4668, "forecast_total": 9330, "diff": -4662, "diff_pct": -50.0, "has_actual": true, "has_forecast": true, "bu1_total": 2144, "dc_total": 1584, "ext_total": 0, "internal_total": 2712}, {"code": "10202002", "name": "I/C Cookie 320 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10202003", "name": "I/C Chocolate 320 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10202004", "name": "I/C Copico 320 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [590, 590, 590, 590, 590, 0, 0], "actual_total": 0, "forecast_total": 2950, "diff": -2950, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 42, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10204001", "name": "Ice cream Fresh Milk 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [370, 256, 369, 453, 289, 340, 470], "forecast_months": [510, 510, 510, 510, 510, 298, 310], "actual_total": 2547, "forecast_total": 3158, "diff": -611, "diff_pct": -19.3, "has_actual": true, "has_forecast": true, "bu1_total": 846, "dc_total": 513, "ext_total": 0, "internal_total": 1915}, {"code": "10204002", "name": "Ice cream Cookie 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [121, 91, 143, 178, 94, 123, 177], "forecast_months": [200, 200, 200, 200, 200, 162, 105], "actual_total": 927, "forecast_total": 1267, "diff": -340, "diff_pct": -26.8, "has_actual": true, "has_forecast": true, "bu1_total": 333, "dc_total": 195, "ext_total": 0, "internal_total": 664}, {"code": "10204003", "name": "Ice cream Rum Raisins 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [91, 79, 125, 153, 97, 106, 163], "forecast_months": [215, 215, 215, 215, 215, 139, 115], "actual_total": 814, "forecast_total": 1329, "diff": -515, "diff_pct": -38.8, "has_actual": true, "has_forecast": true, "bu1_total": 307, "dc_total": 177, "ext_total": 0, "internal_total": 564}, {"code": "10204004", "name": "Ice cream Strawberry 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [105, 79, 107, 141, 77, 87, 137], "forecast_months": [160, 160, 160, 160, 160, 116, 85], "actual_total": 733, "forecast_total": 1001, "diff": -268, "diff_pct": -26.8, "has_actual": true, "has_forecast": true, "bu1_total": 230, "dc_total": 147, "ext_total": 0, "internal_total": 550}, {"code": "10204005", "name": "Ice cream Vanila 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [86, 58, 80, 118, 65, 65, 113], "forecast_months": [105, 105, 105, 105, 105, 101, 53], "actual_total": 585, "forecast_total": 679, "diff": -94, "diff_pct": -13.8, "has_actual": true, "has_forecast": true, "bu1_total": 178, "dc_total": 123, "ext_total": 0, "internal_total": 440}, {"code": "10204006", "name": "ไอศกรีมนมสดชาไทย 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [41, 21, 35, 45, 28, 25, 35], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 230, "forecast_total": 0, "diff": 230, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 82, "dc_total": 39, "ext_total": 0, "internal_total": 160}, {"code": "10204008", "name": "Ice cream Chocolate 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [144, 101, 156, 203, 111, 133, 207], "forecast_months": [215, 215, 215, 215, 215, 167, 115], "actual_total": 1055, "forecast_total": 1357, "diff": -302, "diff_pct": -22.3, "has_actual": true, "has_forecast": true, "bu1_total": 400, "dc_total": 225, "ext_total": 0, "internal_total": 739}, {"code": "10204009", "name": "Ice cream Copico 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [78, 55, 107, 147, 75, 88, 151], "forecast_months": [200, 200, 200, 200, 200, 126, 105], "actual_total": 701, "forecast_total": 1231, "diff": -530, "diff_pct": -43.1, "has_actual": true, "has_forecast": true, "bu1_total": 295, "dc_total": 183, "ext_total": 0, "internal_total": 456}, {"code": "10204010", "name": "Ice cream Green Tea 2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [71, 46, 74, 102, 49, 66, 90], "forecast_months": [160, 160, 160, 160, 160, 116, 85], "actual_total": 498, "forecast_total": 1001, "diff": -503, "diff_pct": -50.2, "has_actual": true, "has_forecast": true, "bu1_total": 185, "dc_total": 117, "ext_total": 0, "internal_total": 351}, {"code": "10204012", "name": "Lime (รสมะนาว)2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [120, 120, 120, 120, 120, 78, 30], "actual_total": 0, "forecast_total": 708, "diff": -708, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10204013", "name": "ไอศกรีมรสน้อยหน่า  2.5 kg.", "unit": "ถาด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [1, 1, 5, 6, 2, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 15, "forecast_total": 0, "diff": 15, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 21, "dc_total": 6, "ext_total": 0, "internal_total": 7}, {"code": "10206001", "name": "ไอศกรีมซอฟต์เสิร์ฟ 5 kg.", "unit": "กล.", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [50, 34, 82, 103, 92, 93, 120], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 574, "forecast_total": 0, "diff": 574, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 222, "dc_total": 0, "ext_total": 72, "internal_total": 215}, {"code": "10206002", "name": "ไอศกรีมซอฟต์เสิร์ฟ 1 kg.", "unit": "ขวด", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [4, 5, 10, 1, 13, 9, 8], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 50, "forecast_total": 0, "diff": 50, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 50}, {"code": "10207001", "name": "ไอศกรีม ถ้วยชิม Fresh Milk 8 g.", "unit": "ถ้วย", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [6699, 1925, 3080, 1155, 1540, 1925, 4235], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 20559, "forecast_total": 0, "diff": 20559, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208001", "name": "ไอศกรีมรสนมสด 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [343, 398, 478, 441, 1092, 597, 562], "forecast_months": [507, 507, 507, 507, 507, 495, 500], "actual_total": 3911, "forecast_total": 3530, "diff": 381, "diff_pct": 10.8, "has_actual": true, "has_forecast": true, "bu1_total": 230, "dc_total": 1971, "ext_total": 288, "internal_total": 2689}, {"code": "10208002", "name": "ไอศกรีมรสช็อคโกแลต 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [90, 83, 110, 131, 386, 155, 137], "forecast_months": [147, 147, 147, 147, 147, 145, 145], "actual_total": 1092, "forecast_total": 1025, "diff": 67, "diff_pct": 6.5, "has_actual": true, "has_forecast": true, "bu1_total": 86, "dc_total": 568, "ext_total": 135, "internal_total": 617}, {"code": "10208003", "name": "ไอศกรีมรสคุกกี้ 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [40, 41, 43, 143, 99, 77, 63], "forecast_months": [91, 91, 91, 91, 91, 95, 95], "actual_total": 506, "forecast_total": 645, "diff": -139, "diff_pct": -21.6, "has_actual": true, "has_forecast": true, "bu1_total": 36, "dc_total": 305, "ext_total": 1, "internal_total": 347}, {"code": "10208004", "name": "ไอศกรีมรสรัมเรซิน 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [47, 56, 81, 105, 298, 129, 80], "forecast_months": [121, 121, 121, 121, 121, 120, 120], "actual_total": 796, "forecast_total": 845, "diff": -49, "diff_pct": -5.8, "has_actual": true, "has_forecast": true, "bu1_total": 37, "dc_total": 424, "ext_total": 1, "internal_total": 547}, {"code": "10208005", "name": "ไอศกรีมรสสตรอเบอร์รี 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [24, 38, 47, 60, 154, 54, 43], "forecast_months": [77, 77, 77, 77, 77, 72, 72], "actual_total": 420, "forecast_total": 529, "diff": -109, "diff_pct": -20.6, "has_actual": true, "has_forecast": true, "bu1_total": 33, "dc_total": 261, "ext_total": 1, "internal_total": 278}, {"code": "10208006", "name": "ไอศกรีมรสกาแฟ 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [47, 41, 57, 95, 172, 84, 64], "forecast_months": [94, 94, 94, 94, 94, 95, 95], "actual_total": 560, "forecast_total": 660, "diff": -100, "diff_pct": -15.2, "has_actual": true, "has_forecast": true, "bu1_total": 24, "dc_total": 315, "ext_total": 1, "internal_total": 395}, {"code": "10208007", "name": "ไอศกรีมรสชาเขียว 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [28, 25, 56, 100, 145, 78, 67], "forecast_months": [85, 85, 85, 85, 85, 90, 90], "actual_total": 499, "forecast_total": 605, "diff": -106, "diff_pct": -17.5, "has_actual": true, "has_forecast": true, "bu1_total": 48, "dc_total": 312, "ext_total": 74, "internal_total": 252}, {"code": "10208008", "name": "Ice cream มะนาว  2.5 kg. (กล่อง)  ", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [37, 37, 37, 37, 37, 37, 37], "actual_total": 0, "forecast_total": 259, "diff": -259, "diff_pct": -100.0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208009", "name": "ไอศกรีมนมสดชาไทย 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [27, 29, 30, 30, 103, 22, 19], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 260, "forecast_total": 0, "diff": 260, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 6, "dc_total": 125, "ext_total": 0, "internal_total": 182}, {"code": "10208010", "name": "ไอศกรีมรสน้อยหน่า 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [0, 1, 1, 0, 0, 0, 23], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 25, "forecast_total": 0, "diff": 25, "diff_pct": 100, "has_actual": true, "has_forecast": true, "bu1_total": 3, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10208011", "name": "ไอศกรีมรสวานิลา 2.5 kg. (กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [56, 35, 70, 101, 173, 90, 80], "forecast_months": [165, 165, 165, 165, 165, 170, 170], "actual_total": 605, "forecast_total": 1165, "diff": -560, "diff_pct": -48.1, "has_actual": true, "has_forecast": true, "bu1_total": 35, "dc_total": 317, "ext_total": 1, "internal_total": 424}, {"code": "10208012", "name": "ไอศกรีมนมกลิ่นวานิลา (ตรา อืมม มิลค์)  2.5 kg.(กล่อง)", "unit": "กล่อง", "group": "ไอศกรีม (Ice Cream)", "group_key": "IceCream", "actual_months": [30, 40, 50, 85, 103, 55, 75], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 438, "forecast_total": 0, "diff": 438, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 213, "ext_total": 365, "internal_total": 0}, {"code": "10301001", "name": "Yoghurt Plain 150 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [2171, 1532, 2425, 2378, 3028, 2715, 2422], "forecast_months": [5500, 5000, 5000, 4500, 4500, 4200, 4320], "actual_total": 16671, "forecast_total": 33020, "diff": -16349, "diff_pct": -49.5, "has_actual": true, "has_forecast": true, "bu1_total": 8036, "dc_total": 0, "ext_total": 0, "internal_total": 10492}, {"code": "10302002", "name": "กรีกโยเกิร์ต (Greek Yogurt)  10 kg./ถุง", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [2977, 30, 640, 80, 510, 120, 120], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 4477, "forecast_total": 0, "diff": 4477, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 1500, "internal_total": 0}, {"code": "10302003", "name": "กรีกโยเกิร์ต (GreekYogurt)  150 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [525, 2577, 23483, 3085, 3233, 3733, 4109], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 40745, "forecast_total": 0, "diff": 40745, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 8762, "dc_total": 0, "ext_total": 4402, "internal_total": 12154}, {"code": "10302004", "name": "กรีกโยเกิร์ต (GreekYogurt)  400 g.", "unit": "ถ้วย", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [500, 1054, 1116, 637, 894, 899, 1209], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 6309, "forecast_total": 0, "diff": 6309, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 1262, "dc_total": 0, "ext_total": 2908, "internal_total": 2377}, {"code": "10302005", "name": "(GF) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [1625, 500, 605, 670, 216, 840, 504], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 4960, "forecast_total": 0, "diff": 4960, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 4335, "internal_total": 0}, {"code": "10302006", "name": "(AC) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [1625, 1963, 1382, 1172, 1318, 1415, 1414], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 10289, "forecast_total": 0, "diff": 10289, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 10284, "internal_total": 0}, {"code": "10302007", "name": "(NV) กรีกโยเกิร์ต (Greek Yogurt)  1 kg.", "unit": "kg.", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [200, 101, 200, 100, 210, 200, 105], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 1116, "forecast_total": 0, "diff": 1116, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 1105, "internal_total": 0}, {"code": "10303001", "name": "Set Yogurt 1.8 kg./กระปุก", "unit": "กระปุก", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [7, 7, 32, 32, 42, 49, 38], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 207, "forecast_total": 0, "diff": 207, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 171, "dc_total": 0, "ext_total": 0, "internal_total": 59}, {"code": "10303002", "name": "Set Yogurt 1.5 kg./ถุง", "unit": "ถุง", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [459, 459, 453, 314, 457, 375, 412], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2929, "forecast_total": 0, "diff": 2929, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 2929, "internal_total": 0}, {"code": "10304102", "name": "Yogurt Softserved  5 kg./GL", "unit": "GL", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [17, 12, 0, 41, 43, 29, 29], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 171, "forecast_total": 0, "diff": 171, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 71, "internal_total": 68}, {"code": "10305001", "name": "Drinking โยเกิร์ต รสนมสด 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [4457, 2931, 3840, 3342, 3939, 4140, 5171], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 27820, "forecast_total": 0, "diff": 27820, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 9845, "dc_total": 0, "ext_total": 3294, "internal_total": 16494}, {"code": "10305002", "name": "Drinking โยเกิร์ต รสนมสด 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [37, 11, 13, 9, 7, 5, 33], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 115, "forecast_total": 0, "diff": 115, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 30, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10305101", "name": "Drinking โยเกิร์ต รสส้มยูสุ 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [2592, 1592, 1924, 1612, 1986, 2002, 2593], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14301, "forecast_total": 0, "diff": 14301, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3709, "dc_total": 0, "ext_total": 2486, "internal_total": 8457}, {"code": "10305102", "name": "Drinking โยเกิร์ต รสส้มยูสุ 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [24, 11, 13, 9, 6, 8, 40], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 111, "forecast_total": 0, "diff": 111, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 37, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10305201", "name": "Drinking โยเกิร์ต รสสตรอเบอร์รี่ 150 g.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [4798, 3151, 3439, 2844, 3637, 3437, 4322], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 25628, "forecast_total": 0, "diff": 25628, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 7573, "dc_total": 0, "ext_total": 3205, "internal_total": 15776}, {"code": "10305202", "name": "Drinking โยเกิร์ต รสสตรอเบอร์รี่ 1 kg.", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [34, 11, 13, 9, 8, 5, 39], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 119, "forecast_total": 0, "diff": 119, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 36, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10306001", "name": "โยเกิร์ตรสบลูเบอร์รี 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [706, 288, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 994, "forecast_total": 0, "diff": 994, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 986}, {"code": "10306101", "name": "โยเกิร์ตรสพีช 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [428, 106, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 534, "forecast_total": 0, "diff": 534, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 518}, {"code": "10306201", "name": "โยเกิร์ตรสสตรอเบอร์รี 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [1042, 237, 8, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 1287, "forecast_total": 0, "diff": 1287, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 1217}, {"code": "10306301", "name": "โยเกิร์ตรสส้มยูสุ 100 กรัม", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [418, 145, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 563, "forecast_total": 0, "diff": 563, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 545}, {"code": "10307001", "name": "Stir Yogurt 5 kg. (ถุง)", "unit": "ถุง", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [0, 5172, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 5172, "forecast_total": 0, "diff": 5172, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5169, "internal_total": 0}, {"code": "10307002", "name": "Stir Yogurt 5 kg. (GL)", "unit": "GL", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [0, 105, 14109, 17295, 13693, 19208, 25468], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 89878, "forecast_total": 0, "diff": 89878, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 18, "dc_total": 0, "ext_total": 89817, "internal_total": 8}, {"code": "10307004", "name": "Stir Yogurt 1 kg./ขวด", "unit": "ขวด", "group": "โยเกิร์ต (Yogurt)", "group_key": "Yogurt", "actual_months": [0, 4, 1779, 822, 1293, 1207, 1056], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 6161, "forecast_total": 0, "diff": 6161, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 5867, "internal_total": 5}, {"code": "10401001", "name": "ท็อฟฟี่รสนม 120 g.", "unit": "ถุง", "group": "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)", "group_key": "Toffee", "actual_months": [5124, 2760, 3886, 3364, 3835, 4154, 5513], "forecast_months": [4802, 4802, 4802, 4802, 4802, 3432, 4416], "actual_total": 28636, "forecast_total": 31858, "diff": -3222, "diff_pct": -10.1, "has_actual": true, "has_forecast": true, "bu1_total": 4058, "dc_total": 0, "ext_total": 72, "internal_total": 24564}, {"code": "10501001", "name": "Mix Fresh Milk  1.085 kg.", "unit": "ขวด", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "group_key": "MixWhip", "actual_months": [54, 40, 125, 158, 155, 124, 160], "forecast_months": [443, 443, 443, 443, 443, 300, 300], "actual_total": 816, "forecast_total": 2815, "diff": -1999, "diff_pct": -71.0, "has_actual": true, "has_forecast": true, "bu1_total": 460, "dc_total": 0, "ext_total": 0, "internal_total": 496}, {"code": "10501003", "name": "Copico Mix 1.113 kg.", "unit": "ขวด", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "group_key": "MixWhip", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 0, "forecast_total": 0, "diff": 0, "diff_pct": 0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "10601001", "name": "Whipping Cream 1000 cc", "unit": "ขวด", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "group_key": "MixWhip", "actual_months": [276, 192, 246, 310, 302, 264, 372], "forecast_months": [432, 432, 432, 432, 432, 160, 160], "actual_total": 1962, "forecast_total": 2480, "diff": -518, "diff_pct": -20.9, "has_actual": true, "has_forecast": true, "bu1_total": 363, "dc_total": 0, "ext_total": 0, "internal_total": 1013}, {"code": "10601003", "name": "Whipping Cream  5 kgs.", "unit": "kg.", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "group_key": "MixWhip", "actual_months": [9435, 10935, 9390, 12285, 6795, 7285, 2790], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 58915, "forecast_total": 0, "diff": 58915, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 58364, "internal_total": 0}, {"code": "10601004", "name": "Whipping Cream  5 kgs./GL", "unit": "GL", "group": "วิปปิ้ง/เนย (Mix,Whipping)", "group_key": "MixWhip", "actual_months": [90, 24, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 114, "forecast_total": 0, "diff": 114, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 114, "internal_total": 0}, {"code": "10701001", "name": "นมอัดเม็ด รสหวาน 55 g.", "unit": "ขวด", "group": "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)", "group_key": "Toffee", "actual_months": [13651, 6875, 9160, 8503, 11952, 11236, 15169], "forecast_months": [7800, 7800, 7800, 7800, 7800, 9184, 9344], "actual_total": 76546, "forecast_total": 57528, "diff": 19018, "diff_pct": 33.1, "has_actual": true, "has_forecast": true, "bu1_total": 11932, "dc_total": 0, "ext_total": 72, "internal_total": 63416}, {"code": "10701002", "name": "นมอัดเม็ด รสมอลล์ 55 g.", "unit": "ขวด", "group": "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)", "group_key": "Toffee", "actual_months": [6603, 3672, 5177, 5143, 6882, 6480, 8374], "forecast_months": [4500, 4500, 4500, 4500, 4500, 5748, 4480], "actual_total": 42331, "forecast_total": 32728, "diff": 9603, "diff_pct": 29.3, "has_actual": true, "has_forecast": true, "bu1_total": 5835, "dc_total": 0, "ext_total": 48, "internal_total": 35902}, {"code": "10702001", "name": "นมปรุงแต่งพร่องมันเนยชนิดเม็ดรสหวาน 20g.", "unit": "ซอง", "group": "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)", "group_key": "Toffee", "actual_months": [22504, 14160, 6106, 3854, 24827, 24766, 27797], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 124014, "forecast_total": 0, "diff": 124014, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 11822, "dc_total": 0, "ext_total": 45000, "internal_total": 66290}, {"code": "11001001", "name": "Fresh Milk Chocolate 100 g.", "unit": "แพ๊ก", "group": "ช็อกโกแลตนามะ (Chocolate NAMA)", "group_key": "ChocoNama", "actual_months": [1237, 660, 908, 789, 861, 749, 902], "forecast_months": [1002, 1002, 1002, 1002, 1002, 930, 1050], "actual_total": 6106, "forecast_total": 6990, "diff": -884, "diff_pct": -12.6, "has_actual": true, "has_forecast": true, "bu1_total": 911, "dc_total": 0, "ext_total": 10, "internal_total": 5111}, {"code": "11101004", "name": "Cheddar Cheese Slice 500 g.", "unit": "kg.", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [74.5, 98.5, 66.5, 64, 80, 72.5, 113], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 569.0, "forecast_total": 0, "diff": 569.0, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 554.5}, {"code": "11101007", "name": "โพรเซสชีส เชดด้า สไลซ์ 250 กรัม (12 แผ่น)", "unit": "ซอง", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [237, 108, 50, 16, 50, 45, 19], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 525, "forecast_total": 0, "diff": 525, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3, "dc_total": 0, "ext_total": 0, "internal_total": 849}, {"code": "11101008", "name": "โพรเซสชีส เชดด้า ลูกเต๋า 100 กรัม", "unit": "ถ้วย", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [632, 195, 146, 149, 888, 267, 285], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 2562, "forecast_total": 0, "diff": 2562, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 6, "dc_total": 0, "ext_total": 0, "internal_total": 1551}, {"code": "11101009", "name": "โพรเซสชีส เชดด้า แบบแท่ง 20 กรัม", "unit": "ซอง", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [7818, 2769, 3022, 2840, 3355, 3986, 4683], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 28473, "forecast_total": 0, "diff": 28473, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3165, "dc_total": 0, "ext_total": 0, "internal_total": 25274}, {"code": "11101010", "name": "โพรเซสชีส เชดด้า แบบแท่ง 15 กรัม (ชิม)", "unit": "ซอง", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [1111, 450, 445, 450, 250, 200, 350], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 3256, "forecast_total": 0, "diff": 3256, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 26, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "11201001", "name": "Chedar Cheese Candy 70 g.", "unit": "ขวด", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [0, 0, 0, 0, 0, 0, 0], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 0, "forecast_total": 0, "diff": 0, "diff_pct": 0, "has_actual": false, "has_forecast": true, "bu1_total": 0, "dc_total": 0, "ext_total": 0, "internal_total": 0}, {"code": "11301001", "name": "Fresh Curd", "unit": "kg.", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [2679, 3055, 3027.5, 1456, 1516, 1669.5, 1084], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 14487.0, "forecast_total": 0, "diff": 14487.0, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 3.5, "dc_total": 0, "ext_total": 14482.5, "internal_total": 0}, {"code": "11402001", "name": "FZN MDL Shredded Cheese  (ชีสขูด)", "unit": "kg.", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [65, 154, 190, 150, 140, 100, 185], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 984, "forecast_total": 0, "diff": 984, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 1, "dc_total": 0, "ext_total": 0, "internal_total": 673}, {"code": "11402003", "name": "มอสเซเรลล่าชีส แบบขูด 100 กรัม", "unit": "ถ้วย", "group": "ชีส (Cheese)", "group_key": "Cheese", "actual_months": [64, 11, 7, 0, 0, 220, 45], "forecast_months": [0, 0, 0, 0, 0, 0, 0], "actual_total": 347, "forecast_total": 0, "diff": 347, "diff_pct": 100, "has_actual": true, "has_forecast": false, "bu1_total": 7, "dc_total": 0, "ext_total": 0, "internal_total": 61}], "groups": {"นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)": {"actual": 83836, "forecast": 85544, "skus": 16}, "นมไร้แลคโตส (0% Lactose)": {"actual": 129508, "forecast": 121452, "skus": 5}, "ไอศกรีม (Ice Cream)": {"actual": 275446, "forecast": 322742, "skus": 38}, "โยเกิร์ต (Yogurt)": {"actual": 260557, "forecast": 33020, "skus": 23}, "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)": {"actual": 271527, "forecast": 122114, "skus": 4}, "วิปปิ้ง/เนย (Mix,Whipping)": {"actual": 61807, "forecast": 5295, "skus": 5}, "ช็อกโกแลตนามะ (Chocolate NAMA)": {"actual": 6106, "forecast": 6990, "skus": 1}, "ชีส (Cheese)": {"actual": 51203.0, "forecast": 0, "skus": 9}}, "kpi": {"total_actual": 1139990.0, "total_forecast": 697157, "diff": 442833.0, "diff_pct": 63.5, "sku_count": 101, "matched_count": 44, "only_actual_count": 50, "only_forecast_count": 7, "over_count": 12, "under_count": 32, "monthly_actual": [178191.5, 128473.5, 167883.0, 145046, 165473, 164835.0, 190088], "monthly_forecast": [118148, 96998, 96048, 95448, 96148, 94130, 100237], "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"]}, "channels": {"BU1": 208781.5, "ศูนย์กระจายสินค้า": 74221, "ลูกค้าภายนอก": 303281.5, "ลูกค้าภายใน": 599918.5}, "weeks": {"2026-06-24_to_2026-06-30": {"label": "24–30 มิ.ย. 2569", "dates": ["2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30"], "shop_totals": {"FAS": 5.0, "CTR2": 6.0, "PSM": 5.0, "B6เหลี่ยม": 25.0, "SHRS": 9.0, "T RS": 4.0, "ต.เสรี": 4.0, "B2": 10.0, "บ้านสวน2": 3.0, "บ้านสวน2.2": 2.0, "B1": 14.0, "Event": 4.0, "บ้านสวน3": 2.0}, "day_totals": {"2026-06-24": 21.0, "2026-06-26": 18.0, "2026-06-27": 24.0, "2026-06-28": 10.0, "2026-06-29": 8.0, "2026-06-30": 12.0}, "group_totals": {"ไอศกรีม (Ice Cream)": 93.0}, "coverage": [{"sheet": "Past. Milk", "has_data": false}, {"sheet": "0%Lactose", "has_data": false}, {"sheet": "Umm Ice", "has_data": false}, {"sheet": "Chocolate NAMA", "has_data": false}, {"sheet": "Yogurt Gr.", "has_data": false}, {"sheet": "Toffee-Milk Tablet", "has_data": false}, {"sheet": "Cheese", "has_data": false}, {"sheet": "IC 60g.", "has_data": false}, {"sheet": "IC 85g.", "has_data": false}, {"sheet": "IC 320g.", "has_data": false}, {"sheet": "IC 2.5kg.(Tray)", "has_data": true}, {"sheet": "IC 2.5kg.(Box)", "has_data": true}, {"sheet": "Mix,Whipping", "has_data": false}], "total_qty": 93.0, "top_products": [{"product": "Rumraisin ถาด 2.5 kg.", "group": "IC 2.5kg.(Tray)", "qty": 43.0}, {"product": "Strawberry ถาด 2.5 kg.", "group": "IC 2.5kg.(Tray)", "qty": 33.0}, {"product": "Thai Tea ถาด 2.5 kg.", "group": "IC 2.5kg.(Tray)", "qty": 12.0}, {"product": "น้อยหน่า ถาด 2.5 kg.", "group": "IC 2.5kg.(Tray)", "qty": 3.0}, {"product": "Thai Tea กล่อง 2.5 kg.", "group": "IC 2.5kg.(Box)", "qty": 1.0}, {"product": "น้อยหน่า กล่อง 2.5 kg.", "group": "IC 2.5kg.(Box)", "qty": 1.0}], "weekly_vs_factory": [{"group": "ไอศกรีม (Ice Cream)", "actual_week_order": 93.0, "factory_weekly_plan": 10706.2, "diff": -10613.2, "diff_pct": -99.1}]}, "2026-08-12_to_2026-08-18": {"label": "12–18 ส.ค. 2569", "dates": ["2026-08-12", "2026-08-13", "2026-08-14", "2026-08-15", "2026-08-16", "2026-08-17", "2026-08-18"], "shop_totals": {"B1": 1843, "B2": 8113, "Sun": 299, "เทราฟู้ด": 120, "SHRS": 9}, "day_totals": {"2026-08-12": 1078, "2026-08-13": 536, "2026-08-14": 3144, "2026-08-15": 1262, "2026-08-16": 998, "2026-08-17": 324, "2026-08-18": 3042}, "group_totals": {"นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)": 1048, "นมไร้แลคโตส (0% Lactose)": 1728, "ไอศกรีม (Ice Cream)": 1519, "ช็อกโกแลตนามะ (Chocolate NAMA)": 130, "โยเกิร์ต (Yogurt)": 1599, "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)": 3600, "ชีส (Cheese)": 740, "วิปปิ้ง/เนย (Mix,Whipping)": 20}, "coverage": [{"sheet": "Past. Milk", "has_data": true}, {"sheet": "0%Lactose", "has_data": true}, {"sheet": "Umm Ice", "has_data": true}, {"sheet": "Chocolate NAMA", "has_data": true}, {"sheet": "Yogurt Gr.", "has_data": true}, {"sheet": "Toffee-Milk Tablet", "has_data": true}, {"sheet": "Cheese", "has_data": true}, {"sheet": "IC 60g.", "has_data": false}, {"sheet": "IC 85g.", "has_data": true}, {"sheet": "IC 320g.", "has_data": true}, {"sheet": "IC 2.5kg.(Tray)", "has_data": true}, {"sheet": "IC 2.5kg.(Box)", "has_data": false}, {"sheet": "Mix,Whipping", "has_data": true}], "total_qty": 10384, "top_products": [{"product": "นมอัดเม็ดรสหวาน ขวด 55 g.", "group": "Toffee-Milk Tablet", "qty": 1200}, {"product": "นมอัดเม็ดรสหวาน ซอง 20 g.", "group": "Toffee-Milk Tablet", "qty": 1200}, {"product": "นมอัดเม็ดรสมอลต์ ขวด 55 g.", "group": "Toffee-Milk Tablet", "qty": 840}, {"product": "โพรเซสชีส เชดด้า แบบแท่ง 20 g.", "group": "Cheese", "qty": 700}, {"product": "จืด(LT) ขวด 255 ml.", "group": "0%Lactose", "qty": 648}, {"product": "สตรอเบอรี่(LTST) ขวด 255 ml.", "group": "0%Lactose", "qty": 456}, {"product": "Drink Yo รสสตรอเบอรี่ ขวด 150 g.", "group": "Yogurt Gr.", "qty": 456}, {"product": "Full Fat(FH) ขวด 1 L.", "group": "Past. Milk", "qty": 432}, {"product": "Drink Yo รสนม ขวด 150 g.", "group": "Yogurt Gr.", "qty": 408}, {"product": "กล้วย(LTBN) ขวด 255 ml.", "group": "0%Lactose", "qty": 384}, {"product": "ท็อปฟี่ 120 g.", "group": "Toffee-Milk Tablet", "qty": 360}, {"product": "Fresh Milk  ถ้วย 85 g.", "group": "IC 85g.", "qty": 312}, {"product": "Low Fat(LF) ขวด 1 L.", "group": "Past. Milk", "qty": 304}, {"product": "Greek Yogurt ถ้วย 150 g.", "group": "Yogurt Gr.", "qty": 264}, {"product": "Coffee Latte(Latte) ขวด 255 ml.", "group": "0%Lactose", "qty": 240}, {"product": "นมสด รสสตอว์เบอรี่ ขวด 190 g.", "group": "Past. Milk", "qty": 204}, {"product": "Chocolate ถ้วย 85 g.", "group": "IC 85g.", "qty": 192}, {"product": "Cookie ถ้วย 85 g.", "group": "IC 85g.", "qty": 192}, {"product": "Copico ถ้วย 85 g.", "group": "IC 85g.", "qty": 168}, {"product": "Yoghurt Plain 150 g.", "group": "Yogurt Gr.", "qty": 144}, {"product": "Drink Yo รสส้มยูซุ ขวด 150 g.", "group": "Yogurt Gr.", "qty": 144}, {"product": "Rumraisin ถ้วย 85 g.", "group": "IC 85g.", "qty": 144}, {"product": "Chocolate NAMA", "group": "Chocolate NAMA", "qty": 130}, {"product": "Greek Yogurt  (ถุง)  10 kg.", "group": "Yogurt Gr.", "qty": 120}, {"product": "Vanilla ถ้วย 85 g.", "group": "IC 85g.", "qty": 120}, {"product": "Greentea ถ้วย 85 g.", "group": "IC 85g.", "qty": 120}, {"product": "Strawberry ถ้วย 85 g.", "group": "IC 85g.", "qty": 120}, {"product": "นมสด รสมัทฉะสตอว์เบอรี่ ขวด 190 g.", "group": "Past. Milk", "qty": 108}, {"product": "โพรเซสชีส เชดด้า ลูกเต๋า 100 g.", "group": "Cheese", "qty": 40}, {"product": "Greek Yogurt ถ้วย 400 g.", "group": "Yogurt Gr.", "qty": 39}], "weekly_vs_factory": [{"group": "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)", "actual_week_order": 3600, "factory_weekly_plan": 4703.0, "diff": -1103.0, "diff_pct": -23.5}, {"group": "นมไร้แลคโตส (0% Lactose)", "actual_week_order": 1728, "factory_weekly_plan": 2968.6, "diff": -1240.6, "diff_pct": -41.8}, {"group": "โยเกิร์ต (Yogurt)", "actual_week_order": 1599, "factory_weekly_plan": 970.0, "diff": 629.0, "diff_pct": 64.8}, {"group": "ไอศกรีม (Ice Cream)", "actual_week_order": 1519, "factory_weekly_plan": 10695.2, "diff": -9176.2, "diff_pct": -85.8}, {"group": "นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)", "actual_week_order": 1048, "factory_weekly_plan": 2532.1, "diff": -1484.1, "diff_pct": -58.6}, {"group": "ชีส (Cheese)", "actual_week_order": 740, "factory_weekly_plan": 0, "diff": 740, "diff_pct": null}, {"group": "ช็อกโกแลตนามะ (Chocolate NAMA)", "actual_week_order": 130, "factory_weekly_plan": 214.8, "diff": -84.8, "diff_pct": -39.5}, {"group": "วิปปิ้ง/เนย (Mix,Whipping)", "actual_week_order": 20, "factory_weekly_plan": 106.2, "diff": -86.2, "diff_pct": -81.2}]}}, "week_order": ["2026-06-24_to_2026-06-30", "2026-08-12_to_2026-08-18"], "trend": {"overall_projection": [{"month": "Aug", "point": 177999, "low": 144302, "high": 211696}, {"month": "Sep", "point": 181785, "low": 148088, "high": 215481}, {"month": "Oct", "point": 185571, "low": 151874, "high": 219267}], "group_trend": {"นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)": {"aug_projection": 12210, "trend_per_month": 58.3}, "นมไร้แลคโตส (0% Lactose)": {"aug_projection": 19261, "trend_per_month": 189.9}, "ไอศกรีม (Ice Cream)": {"aug_projection": 35134, "trend_per_month": -1053.9}, "โยเกิร์ต (Yogurt)": {"aug_projection": 49958, "trend_per_month": 3183.9}, "ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)": {"aug_projection": 51421, "trend_per_month": 3157.8}, "วิปปิ้ง/เนย (Mix,Whipping)": {"aug_projection": 4666, "trend_per_month": -1040.9}, "ช็อกโกแลตนามะ (Chocolate NAMA)": {"aug_projection": 747, "trend_per_month": -31.2}, "ชีส (Cheese)": {"aug_projection": 4602, "trend_per_month": -678.1}}, "method": "Simple linear regression บนยอดขายจริงรายเดือน (ม.ค.-ก.ค. 69) เพื่อประมาณแนวโน้ม 3 เดือนถัดไป พร้อมช่วงความเชื่อมั่นโดยประมาณ (Simple Linear Trend Projection)"}, "group_month_forecast": {"นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)": {"Jan": 37277, "Feb": 30277, "Mar": 30177, "Apr": 30577, "May": 31277, "Jun": 27932, "Jul": 30094, "Aug": 27932, "Sep": 28932, "Oct": 34916, "Nov": 35918, "Dec": 37150}, "นมไร้แลคโตส (0% Lactose)": {"Jan": 23870, "Feb": 19220, "Mar": 17370, "Apr": 16870, "May": 16870, "Jun": 12854, "Jul": 14398, "Aug": 12854, "Sep": 12854, "Oct": 17030, "Nov": 17342, "Dec": 21350}, "อื่นๆ (Others)": {"Jan": 50177, "Feb": 41177, "Mar": 42177, "Apr": 42177, "May": 42177, "Jun": 47825, "Jul": 50101, "Aug": 49777, "Sep": 53325, "Oct": 58781, "Nov": 62069, "Dec": 75725}, "ไอศกรีม (Ice Cream)": {"Jan": 1324, "Feb": 1324, "Mar": 1324, "Apr": 1324, "May": 1324, "Jun": 1319, "Jul": 1324, "Aug": 1319, "Sep": 1454, "Oct": 1449, "Nov": 1449, "Dec": 1458}, "โยเกิร์ต (Yogurt)": {"Jan": 5500, "Feb": 5000, "Mar": 5000, "Apr": 4500, "May": 4500, "Jun": 4200, "Jul": 4320, "Aug": 4200, "Sep": 4200, "Oct": 4400, "Nov": 4248, "Dec": 4560}, "ชีส (Cheese)": {"Jan": 0, "Feb": 0, "Mar": 0, "Apr": 0, "May": 0, "Jun": 0, "Jul": 0, "Aug": 0, "Sep": 0, "Oct": 0, "Nov": 0, "Dec": 0}}}</script>
 <script>
 const DATA = JSON.parse(document.getElementById('bundle-data').textContent);
-const BROWN = '#8A5A34', BROWN_LT = '#C79A6B', GREEN='#4C7A5B', RED='#B4483A', INK='#2B2420';
+const BROWN='#8A5A34', BROWN_LT='#C79A6B', NAVY='#1B140D', INK='#2B2420';
 const fmt = n => Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
-const fmtPct = n => (n>0?'+':'') + Number(n).toFixed(1) + '%';
+const fmtPct = n => (n===null||n===undefined?'—':(n>0?'+':'')+Number(n).toFixed(1)+'%');
 
-document.getElementById('meta-months').textContent = 'ช่วงข้อมูลยอดขายจริง: ม.ค. – ก.ค. 2569';
+/* ---------- TAB NAVIGATION ---------- */
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item=>{
+  item.addEventListener('click', ()=>{
+    navItems.forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+item.dataset.tab).classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+});
+
 document.getElementById('meta-skus').textContent = 'รวม ' + DATA.skus.length + ' SKU';
+document.getElementById('meta-weeks').textContent = DATA.week_order.length + ' สัปดาห์คำสั่งซื้อ';
 
-/* ---------------- KPI CARDS ---------------- */
+/* flow diagram */
+const flowSteps = ['Order Data','Marketing Planning','Factory Weekly Plan','Actual Production','ยอดขายจริง','Data Analysis & Dashboard'];
+const flowEl = document.getElementById('flowDiagram');
+flowSteps.forEach((s,i)=>{
+  const node=document.createElement('div'); node.className='flow-node'; node.textContent=s; flowEl.appendChild(node);
+  if(i<flowSteps.length-1){ const a=document.createElement('div'); a.className='flow-arrow'; a.textContent='→'; flowEl.appendChild(a); }
+});
+
+/* ---------- KPI ---------- */
 const k = DATA.kpi;
 const kpiDefs = [
   {lbl:'ยอดขายจริงสะสม (7 เดือน)', val: fmt(k.total_actual)+' หน่วย', delta:null},
@@ -357,86 +407,94 @@ const kpiDefs = [
 ];
 const kpiGrid = document.getElementById('kpi-grid');
 kpiDefs.forEach(d=>{
-  const div = document.createElement('div');
-  div.className='kpi-card';
+  const div=document.createElement('div'); div.className='kpi-card';
   let deltaHtml='';
-  if(d.delta!==null){
-    const cls = d.delta>=0 ? 'up':'down';
-    deltaHtml = `<div class="delta ${cls}">${d.delta>=0?'▲':'▼'} ${fmtPct(d.delta)} เทียบแผน</div>`;
-  }
+  if(d.delta!==null){ const cls=d.delta>=0?'up':'down'; deltaHtml=`<div class="delta ${cls}">${d.delta>=0?'▲':'▼'} ${fmtPct(d.delta)} เทียบแผน</div>`; }
   div.innerHTML = `<div class="lbl">${d.lbl}</div><div class="val">${d.val}</div>${deltaHtml}`;
   kpiGrid.appendChild(div);
 });
 
-/* ---------------- MONTHLY CHART ---------------- */
-new Chart(document.getElementById('chartMonthly'), {
-  type:'bar',
+/* overview mini trend + channel */
+new Chart(document.getElementById('chartOverviewTrend'), {
   data:{
     labels: DATA.months_th,
     datasets:[
-      {type:'bar', label:'ยอดขายจริง', data:k.monthly_actual, backgroundColor:BROWN, borderRadius:6, maxBarThickness:46},
-      {type:'line', label:'แผน/ประมาณการ', data:k.monthly_forecast, borderColor:'#20180F', backgroundColor:'#20180F', tension:.35, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#20180F'}
+      {type:'bar', label:'ยอดขายจริง', data:k.monthly_actual, backgroundColor:BROWN, borderRadius:6, maxBarThickness:34},
+      {type:'line', label:'แผนฝ่ายการตลาด', data:k.monthly_forecast, borderColor:NAVY, backgroundColor:NAVY, tension:.3, borderWidth:2, pointRadius:3}
+    ]
+  },
+  options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top', labels:{usePointStyle:true, color:INK, font:{family:"'Noto Sans Thai'", size:11}}}},
+    scales:{x:{grid:{display:false}, ticks:{color:'#6B5F53'}}, y:{grid:{color:'#E4DAC7'}, ticks:{color:'#6B5F53', callback:v=>fmt(v)}}}}
+});
+new Chart(document.getElementById('chartOverviewChannel'), {
+  type:'doughnut',
+  data:{labels:Object.keys(DATA.channels), datasets:[{data:Object.values(DATA.channels), backgroundColor:[BROWN,NAVY,BROWN_LT,'#B79D7D'], borderColor:'#fff', borderWidth:3}]},
+  options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:INK, boxWidth:12, font:{family:"'Noto Sans Thai'", size:11}}}}}
+});
+
+/* ---------- TREND TAB ---------- */
+const proj = DATA.trend.overall_projection;
+const monthMap={'Aug':'สิงหาคม','Sep':'กันยายน','Oct':'ตุลาคม'};
+const monthMapShort={'Aug':'ส.ค.','Sep':'ก.ย.','Oct':'ต.ค.'};
+const allMonthLabels = [...DATA.months_th, ...proj.map(p=>monthMapShort[p.month])];
+const actualPadded = [...k.monthly_actual, null, null, null];
+const projLine = [...Array(6).fill(null), k.monthly_actual[6], ...proj.map(p=>p.point)];
+const projHigh = [...Array(6).fill(null), k.monthly_actual[6], ...proj.map(p=>p.high)];
+const projLow = [...Array(6).fill(null), k.monthly_actual[6], ...proj.map(p=>p.low)];
+const forecastPadded = [...k.monthly_forecast, null, null, null];
+
+new Chart(document.getElementById('chartMonthly'), {
+  data:{
+    labels: allMonthLabels,
+    datasets:[
+      {type:'bar', label:'ยอดขายจริง', data:actualPadded, backgroundColor:BROWN, borderRadius:6, maxBarThickness:40},
+      {type:'line', label:'แผนฝ่ายการตลาด', data:forecastPadded, borderColor:NAVY, backgroundColor:NAVY, tension:.3, borderWidth:2.2, pointRadius:3},
+      {type:'line', label:'ประมาณการแนวโน้ม (Trend Projection)', data:projLine, borderColor:'#B4483A', backgroundColor:'#B4483A', borderDash:[6,4], tension:.3, borderWidth:2.2, pointRadius:4},
+      {type:'line', label:'ขอบบนช่วงความเชื่อมั่น', data:projHigh, borderColor:'rgba(180,72,58,0.25)', pointRadius:0, borderWidth:1, fill:'+1'},
+      {type:'line', label:'ขอบล่างช่วงความเชื่อมั่น', data:projLow, borderColor:'rgba(180,72,58,0.25)', pointRadius:0, borderWidth:1, backgroundColor:'rgba(180,72,58,0.08)'},
     ]
   },
   options:{
     responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{position:'top', labels:{usePointStyle:true, color:INK, font:{family:"'Noto Sans Thai'"}}}},
-    scales:{
-      x:{grid:{display:false}, ticks:{color:'#6B5F53'}},
-      y:{grid:{color:'#E4DAC7'}, ticks:{color:'#6B5F53', callback:v=>fmt(v)}}
-    }
+    plugins:{legend:{position:'top', labels:{usePointStyle:true, color:INK, font:{family:"'Noto Sans Thai'", size:11.5}, filter:(item)=>!item.text.includes('ขอบ')}}},
+    scales:{ x:{grid:{display:false}, ticks:{color:'#6B5F53'}}, y:{grid:{color:'#E4DAC7'}, ticks:{color:'#6B5F53', callback:v=>fmt(v)}} }
   }
 });
+const projCardsEl = document.getElementById('projCards');
+proj.forEach(p=>{
+  const div=document.createElement('div'); div.className='proj-card';
+  div.innerHTML = `<div class="m">ประมาณการ ${monthMap[p.month]} 2569</div><div class="p">${fmt(p.point)} หน่วย</div><div class="rng">ช่วงความเป็นไปได้: ${fmt(p.low)} – ${fmt(p.high)} หน่วย</div>`;
+  projCardsEl.appendChild(div);
+});
+document.getElementById('trendMethodNote').textContent = 'วิธีคำนวณ: ' + DATA.trend.method + ' — ใช้เป็นแนวทางประกอบการวางแผนเบื้องต้น ความแม่นยำจะดีขึ้นเมื่อมีข้อมูลยอดขายจริงสะสมมากขึ้น';
 
-/* ---------------- GROUP LIST ---------------- */
+/* ---------- GROUPS TAB ---------- */
 const groupListEl = document.getElementById('group-list');
 const groupEntries = Object.entries(DATA.groups).sort((a,b)=>b[1].actual-a[1].actual);
 const maxGroupVal = Math.max(...groupEntries.map(([g,v])=>Math.max(v.actual,v.forecast)));
 groupEntries.forEach(([g,v])=>{
   const pct = v.forecast ? ((v.actual - v.forecast)/v.forecast*100) : null;
-  const row = document.createElement('div');
-  row.className='group-item';
-  const actualW = (v.actual/maxGroupVal*100).toFixed(1);
-  const fcstW = (v.forecast/maxGroupVal*100).toFixed(1);
-  row.innerHTML = `
-    <div class="gname">${g}<br><span class="pill">${v.skus} SKU</span></div>
-    <div class="group-bar">
-      <div class="seg-forecast" style="width:${fcstW}%"></div>
-      <div class="seg-actual" style="width:${actualW}%"></div>
-    </div>
+  const row=document.createElement('div'); row.className='group-item';
+  const actualW=(v.actual/maxGroupVal*100).toFixed(1), fcstW=(v.forecast/maxGroupVal*100).toFixed(1);
+  row.innerHTML = `<div class="gname">${g}<br><span class="pill">${v.skus} SKU</span></div>
+    <div class="group-bar"><div class="seg-forecast" style="width:${fcstW}%"></div><div class="seg-actual" style="width:${actualW}%"></div></div>
     <div class="group-pct">${pct===null?'—':fmtPct(pct)}</div>`;
   groupListEl.appendChild(row);
 });
-
-/* channel chart */
 new Chart(document.getElementById('chartChannel'), {
   type:'doughnut',
-  data:{
-    labels:Object.keys(DATA.channels),
-    datasets:[{data:Object.values(DATA.channels), backgroundColor:[BROWN,'#20180F',BROWN_LT,'#B79D7D'], borderColor:'#fff', borderWidth:3}]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{position:'bottom', labels:{color:INK, boxWidth:12, font:{family:"'Noto Sans Thai'", size:11.5}}}}
-  }
+  data:{labels:Object.keys(DATA.channels), datasets:[{data:Object.values(DATA.channels), backgroundColor:[BROWN,NAVY,BROWN_LT,'#B79D7D'], borderColor:'#fff', borderWidth:3}]},
+  options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:INK, boxWidth:12, font:{family:"'Noto Sans Thai'", size:11.3}}}}}
 });
 
-/* ---------------- SKU TABLE ---------------- */
+/* ---------- SKU TABLE TAB ---------- */
 const groupFilter = document.getElementById('groupFilter');
-[...new Set(DATA.skus.map(s=>s.group))].sort().forEach(g=>{
-  const o=document.createElement('option'); o.value=g; o.textContent=g; groupFilter.appendChild(o);
-});
-
+[...new Set(DATA.skus.map(s=>s.group))].sort().forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; groupFilter.appendChild(o); });
 let sortKey='actual_total', sortAsc=false;
-function statusOf(s){
-  if(!s.has_forecast) return 'nofcst';
-  if(!s.has_actual) return 'noact';
-  return s.diff>=0 ? 'over':'under';
-}
+function statusOf(s){ if(!s.has_forecast) return 'nofcst'; if(!s.has_actual) return 'noact'; return s.diff>=0?'over':'under'; }
 function renderTable(){
-  const q = document.getElementById('searchBox').value.trim().toLowerCase();
-  const gf = groupFilter.value;
-  const sf = document.getElementById('statusFilter').value;
+  const q=document.getElementById('searchBox').value.trim().toLowerCase();
+  const gf=groupFilter.value, sf=document.getElementById('statusFilter').value;
   let rows = DATA.skus.filter(s=>{
     if(q && !(s.code.toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q))) return false;
     if(gf && s.group!==gf) return false;
@@ -445,35 +503,27 @@ function renderTable(){
   });
   rows.sort((a,b)=>{
     let av=a[sortKey], bv=b[sortKey];
-    if(typeof av==='string'){ av=av||''; bv=bv||''; return sortAsc ? av.localeCompare(bv,'th') : bv.localeCompare(av,'th'); }
-    av = av||0; bv=bv||0;
-    return sortAsc ? av-bv : bv-av;
+    if(typeof av==='string'){ av=av||''; bv=bv||''; return sortAsc?av.localeCompare(bv,'th'):bv.localeCompare(av,'th'); }
+    av=av||0; bv=bv||0; return sortAsc?av-bv:bv-av;
   });
-  const tbody = document.getElementById('skuTbody');
-  tbody.innerHTML='';
+  const tbody=document.getElementById('skuTbody'); tbody.innerHTML='';
   rows.slice(0,500).forEach(s=>{
-    const tr = document.createElement('tr');
-    const st = statusOf(s);
+    const tr=document.createElement('tr'); const st=statusOf(s);
     let tag='';
-    if(st==='over') tag = `<span class="tag pos">เกินแผน</span>`;
-    else if(st==='under') tag = `<span class="tag neg">ต่ำกว่าแผน</span>`;
-    else if(st==='nofcst') tag = `<span class="badge-nodata">ไม่มีแผนเทียบ</span>`;
-    else tag = `<span class="badge-nodata">ไม่มียอดขายจริง</span>`;
-    tr.innerHTML = `
-      <td>${s.code}</td>
-      <td class="name">${s.name||''}</td>
-      <td><span class="pill">${s.group}</span></td>
-      <td class="num">${fmt(s.actual_total)}</td>
-      <td class="num">${s.has_forecast?fmt(s.forecast_total):'—'}</td>
-      <td class="num">${s.has_forecast?( (s.diff>=0?'+':'')+fmt(s.diff)):'—'}</td>
-      <td class="num">${s.has_forecast?fmtPct(s.diff_pct):tag}</td>
-      <td>${s.unit||''}</td>`;
+    if(st==='over') tag=`<span class="tag pos">เกินแผน</span>`;
+    else if(st==='under') tag=`<span class="tag neg">ต่ำกว่าแผน</span>`;
+    else if(st==='nofcst') tag=`<span class="badge-nodata">ไม่มีแผนเทียบ</span>`;
+    else tag=`<span class="badge-nodata">ไม่มียอดขายจริง</span>`;
+    tr.innerHTML = `<td>${s.code}</td><td class="name">${s.name||''}</td><td><span class="pill">${s.group}</span></td>
+      <td class="num">${fmt(s.actual_total)}</td><td class="num">${s.has_forecast?fmt(s.forecast_total):'—'}</td>
+      <td class="num">${s.has_forecast?((s.diff>=0?'+':'')+fmt(s.diff)):'—'}</td>
+      <td class="num">${s.has_forecast?fmtPct(s.diff_pct):tag}</td><td>${s.unit||''}</td>`;
     tbody.appendChild(tr);
   });
 }
 document.querySelectorAll('#skuTable thead th').forEach(th=>{
   th.addEventListener('click', ()=>{
-    const key = th.dataset.key;
+    const key=th.dataset.key;
     if(sortKey===key) sortAsc=!sortAsc; else {sortKey=key; sortAsc=false;}
     document.querySelectorAll('#skuTable thead th').forEach(x=>x.classList.remove('sorted','asc'));
     th.classList.add('sorted'); if(sortAsc) th.classList.add('asc');
@@ -485,75 +535,254 @@ groupFilter.addEventListener('change', renderTable);
 document.getElementById('statusFilter').addEventListener('change', renderTable);
 renderTable();
 
-/* ---------------- WEEKLY ORDER DASHBOARD ---------------- */
-const shopTotals = DATA.order_week.shop_totals;
-const shopEntries = Object.entries(shopTotals).sort((a,b)=>b[1]-a[1]);
-const maxShop = Math.max(...shopEntries.map(e=>e[1]));
-const shopBarsEl = document.getElementById('shopBars');
-shopEntries.forEach(([shop,val])=>{
-  const row=document.createElement('div'); row.className='hbar-row';
-  row.innerHTML = `<div class="hbar-label">${shop}</div>
-    <div class="hbar-track"><div class="hbar-fill" style="width:${(val/maxShop*100).toFixed(1)}%"></div></div>
-    <div class="hbar-val">${fmt(val)}</div>`;
-  shopBarsEl.appendChild(row);
-});
+/* ---------- WEEKLY ORDERS TAB ---------- */
+let chartDay = null;
+let currentWeek = DATA.week_order[DATA.week_order.length-1];
+function renderWeek(wk){
+  currentWeek = wk;
+  const w = DATA.weeks[wk];
+  document.querySelectorAll('.week-tab').forEach(t=>t.classList.toggle('active', t.dataset.wk===wk));
+  document.getElementById('shopDesc').textContent = 'สัปดาห์ ' + w.label + ' · รวม ' + fmt(w.total_qty) + ' หน่วย';
+  document.getElementById('dayDesc').textContent = w.label;
 
-const dayTotals = DATA.order_week.day_totals;
-const dayLabels = Object.keys(dayTotals).sort();
-new Chart(document.getElementById('chartDay'), {
-  type:'bar',
-  data:{labels:dayLabels.map(d=>d.slice(5)), datasets:[{data:dayLabels.map(d=>dayTotals[d]), backgroundColor:BROWN, borderRadius:6, maxBarThickness:44}]},
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{legend:{display:false}},
-    scales:{x:{grid:{display:false}, ticks:{color:'#6B5F53'}}, y:{grid:{color:'#E4DAC7'}, ticks:{color:'#6B5F53'}}}
-  }
-});
-
-/* products with weekly orders (from matched sku codes present in order_week context) */
-const orderSkuNames = {
- 'IC 2.5kg.(Tray)':'ไอศกรีมถาด 2.5 kg. (หลายรส)',
- 'IC 2.5kg.(Box)':'ไอศกรีมกล่อง 2.5 kg. (หลายรส)'
-};
-const skuOrderListEl = document.getElementById('skuOrderList');
-Object.entries(orderSkuNames).forEach(([k2,label])=>{
-  const row=document.createElement('div'); row.className='hbar-row';
-  row.innerHTML = `<div class="hbar-label" style="width:170px">${label}</div><div class="pill">มีคำสั่งซื้อในสัปดาห์นี้</div>`;
-  skuOrderListEl.appendChild(row);
-});
-const coverageListEl = document.getElementById('coverageList');
-const allGroups12 = ['Past. Milk','0%Lactose','Umm Ice','Chocolate NAMA','Yogurt Gr.','Toffee-Milk Tablet','Cheese','IC 60g.','IC 85g.','IC 320g.','IC 2.5kg.(Tray)','IC 2.5kg.(Box)','Mix,Whipping'];
-const hasData = new Set(['IC 2.5kg.(Tray)','IC 2.5kg.(Box)']);
-allGroups12.forEach(g=>{
-  const ok = hasData.has(g);
-  const row=document.createElement('div'); row.className='hbar-row';
-  row.innerHTML = `<div class="hbar-label" style="width:150px">${g}</div><span class="tag ${ok?'pos':'zero'}">${ok?'มีข้อมูล':'ยังไม่กรอก'}</span>`;
-  coverageListEl.appendChild(row);
-});
-
-/* ---------------- WEEKLY VS FACTORY PLAN ---------------- */
-/* Build from skus with forecast June (index 5 in months array Jan..Jul) and order_week shop_totals mapped to Tray/Box category only (we don't have per-SKU code linkage in weekly file, so we show aggregate row for the two known categories) */
-const juneIdx = DATA.months_th.indexOf('มิ.ย.');
-const wvfBody = document.getElementById('weeklyVsFactoryTbody');
-const trayBoxSkus = DATA.skus.filter(s=>/ถาด 2\.5 kg|กล่อง 2\.5 kg/.test(s.name||''));
-let noteExtra = '';
-if(trayBoxSkus.length){
-  trayBoxSkus.forEach(s=>{
-    const juneForecast = s.forecast_months[juneIdx]||0;
-    const weeklyFactoryPlan = juneForecast/4.33;
-    const actualWeekOrder = null; // not linkable at SKU-flavor level from weekly file
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${s.code}</td><td class="name">${s.name}</td>
-      <td class="num">—</td>
-      <td class="num">${fmt(weeklyFactoryPlan)}</td>
-      <td class="num">—</td><td class="num">—</td>`;
-    wvfBody.appendChild(tr);
+  const shopEntries = Object.entries(w.shop_totals).sort((a,b)=>b[1]-a[1]);
+  const maxShop = Math.max(1, ...shopEntries.map(e=>e[1]));
+  const shopBarsEl = document.getElementById('shopBars'); shopBarsEl.innerHTML='';
+  if(shopEntries.length===0){ shopBarsEl.innerHTML = '<div class="badge-nodata">ยังไม่มีข้อมูลคำสั่งซื้อในสัปดาห์นี้</div>'; }
+  shopEntries.forEach(([shop,val])=>{
+    const row=document.createElement('div'); row.className='hbar-row';
+    row.innerHTML = `<div class="hbar-label">${shop}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(val/maxShop*100).toFixed(1)}%"></div></div><div class="hbar-val">${fmt(val)}</div>`;
+    shopBarsEl.appendChild(row);
   });
-  noteExtra = 'ไฟล์ Planning Orders บันทึกคำสั่งซื้อแยกตาม "หน้าร้าน" ไม่ได้ระบุรหัสสินค้า/รสชาติในระดับเดียวกับไฟล์ยอดขายจริงและแผน MK จึงยังไม่สามารถจับคู่ยอดสั่งซื้อจริงรายสัปดาห์กับแผนโรงงานได้ในระดับ SKU-รสชาติ (แสดงเฉพาะแผนโรงงาน/สัปดาห์ที่คำนวณได้) — หากต้องการเทียบระดับนี้ได้แม่นยำ แนะนำให้เพิ่มคอลัมน์รหัสสินค้าในไฟล์ Planning Orders ให้ตรงกับรหัสสินค้าในไฟล์อื่น';
-} else {
-  wvfBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:20px;">ไม่พบ SKU ที่จับคู่ได้</td></tr>';
+
+  const dayLabels = Object.keys(w.day_totals).sort();
+  if(chartDay) chartDay.destroy();
+  chartDay = new Chart(document.getElementById('chartDay'), {
+    type:'bar',
+    data:{labels:dayLabels.map(d=>d.slice(5)), datasets:[{data:dayLabels.map(d=>w.day_totals[d]), backgroundColor:BROWN, borderRadius:6, maxBarThickness:40}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{color:'#6B5F53'}}, y:{grid:{color:'#E4DAC7'}, ticks:{color:'#6B5F53'}}}}
+  });
+
+  const topEl = document.getElementById('topProductsList'); topEl.innerHTML='';
+  if(w.top_products.length===0){ topEl.innerHTML='<div class="badge-nodata">ยังไม่มีข้อมูล</div>'; }
+  const maxP = Math.max(1, ...w.top_products.map(p=>p.qty));
+  w.top_products.slice(0,10).forEach(p=>{
+    const row=document.createElement('div'); row.className='hbar-row';
+    row.innerHTML = `<div class="hbar-label" style="width:190px;text-align:left;">${p.product}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(p.qty/maxP*100).toFixed(1)}%"></div></div><div class="hbar-val">${fmt(p.qty)}</div>`;
+    topEl.appendChild(row);
+  });
+
+  const covEl = document.getElementById('coverageList'); covEl.innerHTML='';
+  w.coverage.forEach(c=>{
+    const row=document.createElement('div'); row.className='hbar-row';
+    row.innerHTML = `<div class="hbar-label" style="width:170px">${c.sheet}</div><span class="tag ${c.has_data?'pos':'zero'}">${c.has_data?'มีข้อมูล':'ยังไม่กรอก'}</span>`;
+    covEl.appendChild(row);
+  });
+
+  const wvfBody = document.getElementById('weeklyVsFactoryTbody'); wvfBody.innerHTML='';
+  if(w.weekly_vs_factory.length===0){
+    wvfBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:18px;">ยังไม่มีข้อมูลคำสั่งซื้อสำหรับสัปดาห์นี้</td></tr>';
+  } else {
+    w.weekly_vs_factory.forEach(r=>{
+      const tr=document.createElement('tr');
+      const tagCls = r.diff_pct===null ? 'zero' : (r.diff>=0?'pos':'neg');
+      tr.innerHTML = `<td class="name">${r.group}</td><td class="num">${fmt(r.actual_week_order)}</td><td class="num">${fmt(r.factory_weekly_plan)}</td>
+        <td class="num">${(r.diff>=0?'+':'')+fmt(r.diff)}</td><td class="num"><span class="tag ${tagCls}">${fmtPct(r.diff_pct)}</span></td>`;
+      wvfBody.appendChild(tr);
+    });
+  }
 }
-document.getElementById('weeklyVsFactoryNote').textContent = noteExtra || 'ยังไม่มีข้อมูลเพียงพอสำหรับการเปรียบเทียบระดับ SKU';
+const weekTabsEl = document.getElementById('weekTabs');
+DATA.week_order.forEach(wk=>{
+  const btn=document.createElement('div'); btn.className='week-tab'; btn.dataset.wk=wk;
+  btn.textContent = DATA.weeks[wk].label;
+  btn.addEventListener('click', ()=>renderWeek(wk));
+  weekTabsEl.appendChild(btn);
+});
+renderWeek(currentWeek);
+
+/* ---------- EXCEL IMPORT / EXPORT (tab 05) ---------- */
+const PLANNING_SHEET_TO_GROUP = {
+ 'Past. Milk':'PastMilk','0%Lactose':'Lactose','Umm Ice':'IceCream','Chocolate NAMA':'ChocoNama',
+ 'Yogurt Gr.':'Yogurt','Toffee-Milk Tablet':'Toffee','Cheese':'Cheese','IC 60g.':'IceCream',
+ 'IC 85g.':'IceCream','IC 320g.':'IceCream','IC 2.5kg.(Tray)':'IceCream','IC 2.5kg.(Box)':'IceCream',
+ 'Mix,Whipping':'MixWhip','Mix,Whipping ':'MixWhip',
+};
+const GROUP_LABEL = {
+ 'PastMilk':'นมพาสเจอร์ไรส์/ปรุงแต่ง (Past. Milk)','Lactose':'นมไร้แลคโตส (0% Lactose)',
+ 'IceCream':'ไอศกรีม (Ice Cream)','Yogurt':'โยเกิร์ต (Yogurt)',
+ 'Toffee':'ทอฟฟี่นม/นมอัดเม็ด (Toffee-Milk)','MixWhip':'วิปปิ้ง/เนย (Mix,Whipping)',
+ 'ChocoNama':'ช็อกโกแลตนามะ (Chocolate NAMA)','Cheese':'ชีส (Cheese)','Others':'อื่นๆ (Others)',
+};
+const ALL_GROUP_SHEETS = Object.keys(PLANNING_SHEET_TO_GROUP).filter(s=>s!=='Mix,Whipping ');
+const MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_TH_FULL = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISO(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+
+function parseSheetMatrix(matrix, sheetName){
+  const products = [];
+  let r = 0;
+  while(r < matrix.length){
+    const row = matrix[r] || [];
+    const title = row[0];
+    const nextRow = matrix[r+1] || [];
+    const nextTitle = nextRow[0];
+    if(title && typeof title === 'string' && nextTitle === 'Date'){
+      const headerRow = matrix[r+1] || [];
+      let dr = r+2;
+      const shopTotals = {}; const dayTotals = {};
+      while(dr < matrix.length){
+        const drow = matrix[dr] || [];
+        const dval = drow[0];
+        if(!(dval instanceof Date)) break;
+        const dstr = toISO(dval);
+        let daySum = 0;
+        for(let c=2;c<headerRow.length;c++){
+          const h = headerRow[c];
+          if(!h || h==='Avg/Day' || h==='รวม' || h==='Total') continue;
+          const v = drow[c];
+          if(typeof v === 'number' && v !== 0){
+            shopTotals[h] = (shopTotals[h]||0) + v;
+            daySum += v;
+          }
+        }
+        if(daySum>0) dayTotals[dstr] = (dayTotals[dstr]||0) + daySum;
+        dr++;
+      }
+      const totalQty = Object.values(shopTotals).reduce((a,b)=>a+b,0);
+      if(totalQty>0){
+        products.push({group: sheetName.trim(), product: String(title).trim(),
+          shop_totals: shopTotals, day_totals: dayTotals, total_qty: Math.round(totalQty*100)/100});
+      }
+      r = dr;
+    } else { r++; }
+  }
+  return products;
+}
+
+function buildWeekFromProducts(products, allDates){
+  const shop_totals = {}, day_totals = {}, group_totals = {};
+  const groupsWithData = new Set();
+  products.forEach(p=>{
+    groupsWithData.add(p.group);
+    const gk = PLANNING_SHEET_TO_GROUP[p.group] || 'Others';
+    group_totals[gk] = (group_totals[gk]||0) + p.total_qty;
+    Object.entries(p.shop_totals).forEach(([s,v])=>{ shop_totals[s]=(shop_totals[s]||0)+v; });
+    Object.entries(p.day_totals).forEach(([d,v])=>{ day_totals[d]=(day_totals[d]||0)+v; });
+  });
+  const coverage = ALL_GROUP_SHEETS.map(gs=>({sheet:gs, has_data: groupsWithData.has(gs)}));
+  const sortedDates = [...allDates].sort();
+  const minD = new Date(sortedDates[0]), maxD = new Date(sortedDates[sortedDates.length-1]);
+  const label = minD.getDate()+'–'+maxD.getDate()+' '+MONTH_TH_FULL[maxD.getMonth()]+' '+(maxD.getFullYear()+543-2000+2500-543);
+  // determine dominant month (English abbrev) for factory-plan lookup, using the max date's month
+  const monthEn = MONTH_EN[maxD.getMonth()];
+  const weekly_vs_factory = Object.entries(group_totals).sort((a,b)=>b[1]-a[1]).map(([gk,qty])=>{
+    const monthlyFcst = (DATA.group_month_forecast[gk] && DATA.group_month_forecast[gk][monthEn]) || 0;
+    const weeklyPlan = monthlyFcst ? monthlyFcst/4.33 : 0;
+    const diff = qty - weeklyPlan;
+    const pct = weeklyPlan ? (diff/weeklyPlan*100) : null;
+    return {group: GROUP_LABEL[gk]||gk, actual_week_order: Math.round(qty*10)/10,
+      factory_weekly_plan: Math.round(weeklyPlan*10)/10, diff: Math.round(diff*10)/10,
+      diff_pct: pct===null?null:Math.round(pct*10)/10};
+  });
+  const top_products = products.slice().sort((a,b)=>b.total_qty-a.total_qty).slice(0,30)
+    .map(p=>({product:p.product, group:p.group, qty:p.total_qty}));
+  return {
+    label, dates: sortedDates,
+    shop_totals, day_totals,
+    group_totals: Object.fromEntries(Object.entries(group_totals).map(([gk,v])=>[GROUP_LABEL[gk]||gk, v])),
+    coverage, total_qty: Math.round(Object.values(shop_totals).reduce((a,b)=>a+b,0)*10)/10,
+    top_products, weekly_vs_factory,
+    _dateRange: [sortedDates[0], sortedDates[sortedDates.length-1]]
+  };
+}
+
+const importInput = document.getElementById('importFile');
+const ioStatus = document.getElementById('ioStatus');
+importInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  ioStatus.textContent = 'กำลังอ่านไฟล์ ' + file.name + ' …';
+  ioStatus.className = 'io-status';
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(evt.target.result), {type:'array', cellDates:true});
+      const sheetNames = wb.SheetNames.slice(1); // skip index sheet
+      let allProducts = [];
+      let allDates = new Set();
+      sheetNames.forEach(sn=>{
+        const ws = wb.Sheets[sn];
+        const matrix = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+        const prods = parseSheetMatrix(matrix, sn);
+        prods.forEach(p=>{ Object.keys(p.day_totals).forEach(d=>allDates.add(d)); });
+        allProducts = allProducts.concat(prods);
+      });
+      if(allProducts.length===0){
+        ioStatus.textContent = 'ไม่พบข้อมูลคำสั่งซื้อในไฟล์นี้ (อาจเป็นแบบฟอร์มว่าง)';
+        ioStatus.className = 'io-status err';
+        return;
+      }
+      const weekObj = buildWeekFromProducts(allProducts, allDates);
+      const weekId = weekObj._dateRange[0] + '_to_' + weekObj._dateRange[1];
+      delete weekObj._dateRange;
+      const isNew = !DATA.weeks[weekId];
+      DATA.weeks[weekId] = weekObj;
+      if(isNew) DATA.week_order.push(weekId);
+      DATA.week_order.sort();
+      rebuildWeekTabs();
+      renderWeek(weekId);
+      ioStatus.textContent = '✓ นำเข้าสำเร็จ: สัปดาห์ ' + weekObj.label + ' (' + allProducts.length + ' รายการสินค้า, ' + fmt(weekObj.total_qty) + ' หน่วย)';
+      ioStatus.className = 'io-status ok';
+    }catch(err){
+      console.error(err);
+      ioStatus.textContent = 'เกิดข้อผิดพลาดในการอ่านไฟล์: ' + err.message;
+      ioStatus.className = 'io-status err';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  importInput.value = '';
+});
+
+function rebuildWeekTabs(){
+  weekTabsEl.innerHTML = '';
+  DATA.week_order.forEach(wk=>{
+    const btn=document.createElement('div'); btn.className='week-tab'; btn.dataset.wk=wk;
+    btn.textContent = DATA.weeks[wk].label;
+    btn.addEventListener('click', ()=>renderWeek(wk));
+    weekTabsEl.appendChild(btn);
+  });
+}
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const w = DATA.weeks[currentWeek];
+  if(!w){ return; }
+  const wb = XLSX.utils.book_new();
+
+  const shopRows = [['หน้าร้าน/จุดขาย','จำนวนรวม']];
+  Object.entries(w.shop_totals).sort((a,b)=>b[1]-a[1]).forEach(([s,v])=>shopRows.push([s,v]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(shopRows), 'ยอดตามหน้าร้าน');
+
+  const dayRows = [['วันที่','จำนวนรวม']];
+  Object.keys(w.day_totals).sort().forEach(d=>dayRows.push([d, w.day_totals[d]]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dayRows), 'ยอดตามวัน');
+
+  const prodRows = [['สินค้า','กลุ่ม','จำนวนรวม']];
+  w.top_products.forEach(p=>prodRows.push([p.product, p.group, p.qty]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prodRows), 'สินค้าที่สั่งซื้อ');
+
+  const wvfRows = [['กลุ่มสินค้า','คำสั่งซื้อจริง/สัปดาห์','แผนโรงงาน/สัปดาห์','ส่วนต่าง','%เทียบแผน']];
+  w.weekly_vs_factory.forEach(r=>wvfRows.push([r.group, r.actual_week_order, r.factory_weekly_plan, r.diff, r.diff_pct]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wvfRows), 'เทียบแผนโรงงาน');
+
+  const covRows = [['กลุ่มสินค้า','มีข้อมูล']];
+  w.coverage.forEach(c=>covRows.push([c.sheet, c.has_data ? 'มี' : 'ยังไม่กรอก']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(covRows), 'ความครบถ้วนข้อมูล');
+
+  XLSX.writeFile(wb, 'planning_orders_' + currentWeek + '.xlsx');
+});
 </script>
 </body>
 </html>
